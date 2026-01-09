@@ -167,98 +167,54 @@ struct TabButton: View {
 struct SettingsView: View {
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var notificationManager = NotificationManager.shared
-    
+
     @State private var showSignOutAlert = false
     @State private var showDeleteAccountAlert = false
     @AppStorage(Constants.UserDefaultsKeys.preferredWeightUnit) private var weightUnit = WeightUnit.pounds.rawValue
-    
+
     var body: some View {
         NavigationStack {
-            List {
-                // Account Section
-                Section("Account") {
-                    if let user = authViewModel.currentUser {
-                        HStack {
-                            Circle()
-                                .fill(Color.blue.gradient)
-                                .frame(width: 50, height: 50)
-                                .overlay(
-                                    Text(String(user.email?.prefix(1).uppercased() ?? "U"))
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                        .foregroundStyle(.white)
-                                )
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(user.displayName ?? "User")
-                                    .font(.headline)
-                                Text(user.email ?? "")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+            ZStack {
+                // Pure black background
+                Color.black.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        // Header
+                        headerSection
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+
+                        // Profile Card
+                        if let user = authViewModel.currentUser {
+                            profileCard(user: user)
+                                .padding(.horizontal, 16)
                         }
+
+                        // Preferences Section
+                        preferencesSection
+                            .padding(.horizontal, 16)
+
+                        // Notifications Section
+                        notificationsSection
+                            .padding(.horizontal, 16)
+
+                        // About Section
+                        aboutSection
+                            .padding(.horizontal, 16)
+
+                        // Sign Out Button
+                        signOutButton
+                            .padding(.horizontal, 16)
+
+                        // Delete Account Button
+                        deleteAccountButton
+                            .padding(.horizontal, 16)
+
+                        // Spacer for tab bar
+                        Color.clear.frame(height: 80)
                     }
-                    
-                    Button(role: .destructive, action: { showSignOutAlert = true }) {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                }
-                
-                // Preferences Section
-                Section("Preferences") {
-                    Picker("Weight Unit", selection: $weightUnit) {
-                        ForEach(WeightUnit.allCases, id: \.rawValue) { unit in
-                            Text(unit.fullName).tag(unit.rawValue)
-                        }
-                    }
-                }
-                
-                // Notifications Section
-                Section("Notifications") {
-                    Toggle("Workout Reminders", isOn: $notificationManager.reminderEnabled)
-                        .onChange(of: notificationManager.reminderEnabled) { _, enabled in
-                            if enabled {
-                                Task {
-                                    let granted = await notificationManager.requestAuthorization()
-                                    if !granted {
-                                        notificationManager.reminderEnabled = false
-                                    } else {
-                                        notificationManager.saveSettings()
-                                    }
-                                }
-                            } else {
-                                notificationManager.saveSettings()
-                            }
-                        }
-                    
-                    if notificationManager.reminderEnabled {
-                        NavigationLink {
-                            ReminderSettingsView()
-                        } label: {
-                            Label("Reminder Schedule", systemImage: "clock")
-                        }
-                    }
-                }
-                
-                // About Section
-                Section("About") {
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        Text(Constants.App.appVersion)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    Link(destination: URL(string: "https://firebase.google.com")!) {
-                        Label("Powered by Firebase", systemImage: "server.rack")
-                    }
-                }
-                
-                // Danger Zone
-                Section {
-                    Button(role: .destructive, action: { showDeleteAccountAlert = true }) {
-                        Label("Delete Account", systemImage: "trash")
-                    }
+                    .padding(.vertical, 16)
                 }
             }
             .alert("Sign Out", isPresented: $showSignOutAlert) {
@@ -280,6 +236,251 @@ struct SettingsView: View {
                 Text("This will permanently delete your account and all data. This action cannot be undone.")
             }
         }
+    }
+
+    // MARK: - Header Section
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "person.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+
+                Text("PROFILE")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
+            }
+
+            Text("Settings")
+                .font(.system(size: 32, weight: .semibold))
+                .foregroundStyle(.white)
+
+            Text("Manage your account and app preferences.")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(Color(hex: "999999"))
+                .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Profile Card
+
+    private func profileCard(user: FirebaseAuth.User) -> some View {
+        HStack(spacing: 16) {
+            Circle()
+                .fill(Color(hex: "2A2A2A"))
+                .frame(width: 60, height: 60)
+                .overlay(
+                    Text(String(user.email?.prefix(1).uppercased() ?? "U"))
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(AppTheme.neonGreen)
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(user.displayName ?? "User")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(.white)
+
+                Text(user.email ?? "")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(Color(hex: "999999"))
+            }
+
+            Spacer()
+        }
+        .padding(20)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(16)
+    }
+
+    // MARK: - Preferences Section
+
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("PREFERENCES")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "666666"))
+                .tracking(0.8)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Weight Unit")
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundStyle(.white)
+
+                    Spacer()
+
+                    Menu {
+                        ForEach(WeightUnit.allCases, id: \.rawValue) { unit in
+                            Button(action: {
+                                weightUnit = unit.rawValue
+                            }) {
+                                HStack {
+                                    Text(unit.fullName)
+                                    if weightUnit == unit.rawValue {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(WeightUnit(rawValue: weightUnit)?.fullName ?? "Pounds")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color(hex: "999999"))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Color(hex: "666666"))
+                        }
+                    }
+                }
+                .padding(16)
+            }
+            .background(Color(hex: "1A1A1A"))
+            .cornerRadius(16)
+        }
+    }
+
+    // MARK: - Notifications Section
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("NOTIFICATIONS")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "666666"))
+                .tracking(0.8)
+
+            VStack(spacing: 1) {
+                HStack {
+                    Text("Workout Reminders")
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundStyle(.white)
+
+                    Spacer()
+
+                    Toggle("", isOn: $notificationManager.reminderEnabled)
+                        .labelsHidden()
+                        .tint(AppTheme.neonGreen)
+                        .onChange(of: notificationManager.reminderEnabled) { _, enabled in
+                            if enabled {
+                                Task {
+                                    let granted = await notificationManager.requestAuthorization()
+                                    if !granted {
+                                        notificationManager.reminderEnabled = false
+                                    } else {
+                                        notificationManager.saveSettings()
+                                    }
+                                }
+                            } else {
+                                notificationManager.saveSettings()
+                            }
+                        }
+                }
+                .padding(16)
+                .background(Color(hex: "1A1A1A"))
+
+                if notificationManager.reminderEnabled {
+                    NavigationLink {
+                        ReminderSettingsView()
+                    } label: {
+                        HStack {
+                            Text("Reminder Schedule")
+                                .font(.system(size: 15, weight: .regular))
+                                .foregroundStyle(.white)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color(hex: "666666"))
+                        }
+                        .padding(16)
+                        .background(Color(hex: "1A1A1A"))
+                    }
+                }
+            }
+            .cornerRadius(16)
+        }
+    }
+
+    // MARK: - About Section
+
+    private var aboutSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("ABOUT")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "666666"))
+                .tracking(0.8)
+
+            VStack(spacing: 1) {
+                HStack {
+                    Text("Version")
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundStyle(.white)
+
+                    Spacer()
+
+                    Text(Constants.App.appVersion)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color(hex: "999999"))
+                }
+                .padding(16)
+                .background(Color(hex: "1A1A1A"))
+
+                Link(destination: URL(string: "https://firebase.google.com")!) {
+                    HStack {
+                        Text("Powered by Firebase")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundStyle(.white)
+
+                        Spacer()
+
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color(hex: "666666"))
+                    }
+                    .padding(16)
+                    .background(Color(hex: "1A1A1A"))
+                }
+            }
+            .cornerRadius(16)
+        }
+    }
+
+    // MARK: - Sign Out Button
+
+    private var signOutButton: some View {
+        Button(action: { showSignOutAlert = true }) {
+            HStack(spacing: 10) {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.system(size: 14, weight: .semibold))
+
+                Text("SIGN OUT")
+                    .font(.system(size: 13, weight: .bold))
+                    .tracking(0.5)
+            }
+            .foregroundStyle(Color(hex: "1A1A1A"))
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(.white)
+            .cornerRadius(24)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Delete Account Button
+
+    private var deleteAccountButton: some View {
+        Button(action: { showDeleteAccountAlert = true }) {
+            Text("Delete Account")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+        }
+        .buttonStyle(.plain)
     }
 }
 

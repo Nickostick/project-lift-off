@@ -11,37 +11,42 @@ struct AuthenticationView: View {
 
     var body: some View {
         ZStack {
-            // Dark background
-            AppTheme.darkBackground.ignoresSafeArea()
+            // Pure black background
+            Color.black.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 32) {
-                    // Logo and Title
-                    VStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(AppTheme.neonGreen.opacity(0.15))
-                                .frame(width: 120, height: 120)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    // Header Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "lock.shield.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Color(hex: "666666"))
 
-                            Image(systemName: "figure.strengthtraining.traditional")
-                                .font(.system(size: 60))
-                                .foregroundStyle(AppTheme.neonGreen)
+                            Text("SECURE ACCESS")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color(hex: "666666"))
+                                .tracking(0.8)
                         }
 
-                        Text("ProjectLiftOff")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundStyle(AppTheme.textPrimary)
+                        Text(viewModel.isSignUpMode ? "Create Account" : "Welcome\nBack")
+                            .font(.system(size: 32, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .lineSpacing(2)
 
-                        Text(viewModel.isSignUpMode ? "Create an account to get started" : "Welcome back!")
-                            .font(AppTheme.Typography.callout)
-                            .foregroundStyle(AppTheme.textSecondary)
+                        Text(viewModel.isSignUpMode ? "Sign up to sync your workout data and access your personalized routines." : "Sign in to sync your workout data and access your personalized routines.")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundStyle(Color(hex: "999999"))
+                            .padding(.top, 4)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
                     .padding(.top, 60)
 
-                    // Form
+                    // Form Section
                     VStack(spacing: 16) {
                         if viewModel.isSignUpMode {
-                            CustomTextField(
+                            MinimalTextField(
                                 icon: "person.fill",
                                 placeholder: "Display Name (optional)",
                                 text: $viewModel.displayName
@@ -53,9 +58,9 @@ struct AuthenticationView: View {
                             .onSubmit { focusedField = .email }
                         }
 
-                        CustomTextField(
-                            icon: "envelope.fill",
-                            placeholder: "Email",
+                        MinimalTextField(
+                            icon: viewModel.isSignUpMode ? "envelope.fill" : "person.fill",
+                            placeholder: viewModel.isSignUpMode ? "Email" : "EMAIL OR USERNAME",
                             text: $viewModel.email
                         )
                         .textContentType(.emailAddress)
@@ -66,9 +71,9 @@ struct AuthenticationView: View {
                         .submitLabel(.next)
                         .onSubmit { focusedField = .password }
 
-                        CustomSecureField(
+                        MinimalSecureField(
                             icon: "lock.fill",
-                            placeholder: "Password",
+                            placeholder: "PASSWORD",
                             text: $viewModel.password
                         )
                         .textContentType(viewModel.isSignUpMode ? .newPassword : .password)
@@ -83,9 +88,9 @@ struct AuthenticationView: View {
                         }
 
                         if viewModel.isSignUpMode {
-                            CustomSecureField(
+                            MinimalSecureField(
                                 icon: "lock.shield.fill",
-                                placeholder: "Confirm Password",
+                                placeholder: "CONFIRM PASSWORD",
                                 text: $viewModel.confirmPassword
                             )
                             .textContentType(.newPassword)
@@ -96,9 +101,10 @@ struct AuthenticationView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, AppTheme.Layout.screenPadding)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
 
-                    // Action Buttons
+                    // Action Button
                     VStack(spacing: 16) {
                         Button(action: {
                             Task {
@@ -109,44 +115,47 @@ struct AuthenticationView: View {
                                 }
                             }
                         }) {
-                            HStack(spacing: 12) {
+                            HStack(spacing: 10) {
                                 if viewModel.isLoading {
                                     ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.darkBackground))
+                                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "1A1A1A")))
                                 } else {
-                                    Image(systemName: viewModel.isSignUpMode ? "person.badge.plus" : "arrow.right.circle.fill")
-                                        .font(.system(size: 20))
-                                    Text(viewModel.isSignUpMode ? "Create Account" : "Sign In")
-                                        .font(AppTheme.Typography.headline)
+                                    Text(viewModel.isSignUpMode ? "CREATE ACCOUNT" : "LOGIN")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .tracking(0.5)
+
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 14, weight: .semibold))
                                 }
                             }
-                            .foregroundStyle(AppTheme.darkBackground)
+                            .foregroundStyle(Color(hex: "1A1A1A"))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 56)
+                            .frame(height: 48)
                             .background(
                                 viewModel.isFormValid && !viewModel.isLoading
-                                    ? AppTheme.neonGreen
-                                    : AppTheme.textTertiary
+                                    ? .white
+                                    : Color(hex: "2A2A2A")
                             )
-                            .cornerRadius(AppTheme.Layout.buttonCornerRadius)
+                            .cornerRadius(24)
                         }
                         .disabled(!viewModel.isFormValid || viewModel.isLoading)
-                        .padding(.horizontal, AppTheme.Layout.screenPadding)
 
                         if !viewModel.isSignUpMode {
                             Button("Forgot Password?") {
                                 viewModel.resetPasswordEmail = viewModel.email
                                 viewModel.showResetPasswordAlert = true
                             }
-                            .font(AppTheme.Typography.callout)
-                            .foregroundStyle(AppTheme.neonGreen)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color(hex: "999999"))
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
 
                     // Toggle Mode
                     HStack(spacing: 4) {
                         Text(viewModel.isSignUpMode ? "Already have an account?" : "Don't have an account?")
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .foregroundStyle(Color(hex: "999999"))
 
                         Button(viewModel.isSignUpMode ? "Sign In" : "Sign Up") {
                             withAnimation(AppTheme.Animation.spring) {
@@ -154,9 +163,10 @@ struct AuthenticationView: View {
                             }
                         }
                         .fontWeight(.semibold)
-                        .foregroundStyle(AppTheme.neonGreen)
+                        .foregroundStyle(AppTheme.primaryBlue)
                     }
-                    .font(AppTheme.Typography.callout)
+                    .font(.system(size: 14, weight: .regular))
+                    .padding(.top, 16)
 
                     Spacer(minLength: 50)
                 }
@@ -183,9 +193,9 @@ struct AuthenticationView: View {
     }
 }
 
-// MARK: - Custom Text Field
+// MARK: - Minimal Text Field
 
-struct CustomTextField: View {
+struct MinimalTextField: View {
     let icon: String
     let placeholder: String
     @Binding var text: String
@@ -193,23 +203,23 @@ struct CustomTextField: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(AppTheme.textSecondary)
-                .frame(width: 24)
+                .font(.system(size: 16))
+                .foregroundStyle(Color(hex: "666666"))
+                .frame(width: 20)
 
             TextField(placeholder, text: $text)
-                .font(AppTheme.Typography.body)
-                .foregroundStyle(AppTheme.textPrimary)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(.white)
         }
         .padding(16)
-        .background(AppTheme.cardBackground)
-        .cornerRadius(AppTheme.Layout.cardCornerRadius)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(12)
     }
 }
 
-// MARK: - Custom Secure Field
+// MARK: - Minimal Secure Field
 
-struct CustomSecureField: View {
+struct MinimalSecureField: View {
     let icon: String
     let placeholder: String
     @Binding var text: String
@@ -217,17 +227,17 @@ struct CustomSecureField: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(AppTheme.textSecondary)
-                .frame(width: 24)
+                .font(.system(size: 16))
+                .foregroundStyle(Color(hex: "666666"))
+                .frame(width: 20)
 
             SecureField(placeholder, text: $text)
-                .font(AppTheme.Typography.body)
-                .foregroundStyle(AppTheme.textPrimary)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(.white)
         }
         .padding(16)
-        .background(AppTheme.cardBackground)
-        .cornerRadius(AppTheme.Layout.cardCornerRadius)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(12)
     }
 }
 

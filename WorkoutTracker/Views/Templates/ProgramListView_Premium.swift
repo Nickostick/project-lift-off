@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Premium 2026 ProgramListView - Bold gradient cards with energetic design
+/// Premium ProgramListView - Clean minimal library design
 struct ProgramListView_Premium: View {
     @ObservedObject var viewModel: ProgramViewModel
 
@@ -14,28 +14,38 @@ struct ProgramListView_Premium: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background with subtle orbs
-                backgroundLayer
+                // Pure black background
+                Color.black.ignoresSafeArea()
 
-                Group {
-                    if viewModel.programs.isEmpty && !viewModel.isLoading {
-                        emptyStateView
-                    } else {
-                        programsScrollView
+                ScrollView(showsIndicators: false) {
+                    // IMPORTANT: Padding is applied to individual sections, not the container VStack.
+                    // This pattern prevents NavigationLink labels from expanding edge-to-edge,
+                    // which can happen when container-level padding is used with certain modifiers.
+                    VStack(spacing: 24) {
+                        // Header
+                        headerSection
+                            .padding(.horizontal, 20)
+                            .padding(.top, 8)
+
+                        if viewModel.programs.isEmpty && !viewModel.isLoading {
+                            emptyStateView
+                                .padding(.horizontal, 20)
+                        } else {
+                            // Routines List
+                            routinesSection
+                                .padding(.horizontal, 20)
+                        }
+
+                        // Add Template Button
+                        addTemplateButton
+                            .padding(.horizontal, 20)
+
+                        // Spacer for tab bar
+                        Color.clear.frame(height: 80)
                     }
+                    .padding(.vertical, 16)
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: { showAddProgram = true }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundStyle(AppTheme.primaryGradient)
-                            .symbolRenderingMode(.hierarchical)
-                    }
-                }
-            }
-            .searchable(text: $viewModel.searchText, prompt: "Search programs")
             .sheet(isPresented: $showAddProgram) {
                 ProgramFormView(viewModel: viewModel, program: nil)
             }
@@ -49,7 +59,7 @@ struct ProgramListView_Premium: View {
                 if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
-                        .tint(AppTheme.vibrantPurple)
+                        .tint(AppTheme.neonGreen)
                 }
             }
             .alert("Error", isPresented: $viewModel.showError) {
@@ -73,121 +83,247 @@ struct ProgramListView_Premium: View {
         }
     }
 
-    // MARK: - Background Layer
+    // MARK: - Header Section
 
-    private var backgroundLayer: some View {
-        AppTheme.darkBackground.ignoresSafeArea()
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "folder.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+
+                Text("LIBRARY")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
+            }
+
+            Text("Workout\nTemplates")
+                .font(.system(size: 32, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineSpacing(2)
+
+            Text("Select a routine from your collection to begin training.")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(Color(hex: "999999"))
+                .padding(.top, 4)
+        }
     }
 
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        VStack(spacing: 20) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 48, weight: .light))
+                .foregroundStyle(Color(hex: "444444"))
 
-            // Icon
-            Image(systemName: "doc.text.fill")
-                .font(.system(size: 60, weight: .light))
-                .foregroundStyle(AppTheme.textSecondary)
+            VStack(spacing: 8) {
+                Text("No Templates Yet")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(.white)
 
-            VStack(spacing: 12) {
-                Text("No Programs Yet")
-                    .font(AppTheme.Typography.title1)
-                    .fontWeight(.medium)
-                    .foregroundStyle(AppTheme.textPrimary)
+                Text("Create your first workout program")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(Color(hex: "999999"))
+            }
+        }
+        .frame(height: 240)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: "1A1A1A"))
+        )
+    }
 
-                Text("Create your first workout program to get started")
-                    .font(AppTheme.Typography.callout)
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+    // MARK: - Routines Section
+
+    private var routinesSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Section header with sort indicator
+            HStack {
+                Text("YOUR ROUTINES")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
+
+                Spacer()
+
+                Text("SORT: LAST USED")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(hex: "444444"))
+                    .tracking(0.5)
             }
 
-            Button(action: { showAddProgram = true }) {
+            // Program cards with navigation and context menu
+            ForEach(viewModel.filteredPrograms) { program in
+                NavigationLink {
+                    ProgramDetailView_Premium(program: program, viewModel: viewModel)
+                } label: {
+                    MinimalProgramCard(program: program)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button(action: {
+                        programToEdit = program
+                    }) {
+                        Label("Edit", systemImage: "pencil")
+                    }
+
+                    Button(action: {
+                        Task { await viewModel.copyProgram(program) }
+                    }) {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+
+                    Button(action: {
+                        shareItems = viewModel.getShareItems(for: program)
+                        showShareSheet = true
+                    }) {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+
+                    Divider()
+
+                    Button(role: .destructive, action: {
+                        programToDelete = program
+                        showDeleteConfirmation = true
+                    }) {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Add Template Button
+
+    private var addTemplateButton: some View {
+        Button(action: { showAddProgram = true }) {
+            // Using HStack with Spacers instead of .frame(maxWidth: .infinity)
+            // This approach properly respects parent padding
+            HStack {
+                Spacer()
+
                 HStack(spacing: 10) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 18, weight: .medium))
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .semibold))
 
-                    Text("Create Program")
-                        .font(AppTheme.Typography.headline)
+                    Text("NEW TEMPLATE")
+                        .font(.system(size: 13, weight: .bold))
+                        .tracking(0.5)
                 }
-                .foregroundStyle(AppTheme.darkBackground)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 14)
-                .background(AppTheme.neonGreen)
-                .cornerRadius(AppTheme.Layout.buttonCornerRadius)
+
+                Spacer()
+            }
+            .foregroundStyle(Color(hex: "1A1A1A"))
+            .frame(height: 48)
+            .background(.white)
+            .cornerRadius(24)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Minimal Program Card
+
+/// Displays a program card with workout details and a play button
+/// Uses .fixedSize(horizontal: true) to prevent edge-to-edge expansion within NavigationLink
+struct MinimalProgramCard: View {
+    let program: Program
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Category badge
+                HStack(spacing: 6) {
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .font(.system(size: 10, weight: .semibold))
+
+                    Text("STRENGTH")
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(0.5)
+                }
+                .foregroundStyle(Color(hex: "666666"))
+
+                // Program name
+                Text(program.name)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                // Exercise list preview
+                Text(exercisePreview)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(Color(hex: "999999"))
+                    .lineLimit(1)
+
+                // Stats row
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Text("DURATION")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(Color(hex: "666666"))
+
+                        Text("\(program.days.count * 40) MIN")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(AppTheme.energyOrange)
+                    }
+                    .fixedSize()
+
+                    HStack(spacing: 4) {
+                        Text("VOLUME")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(Color(hex: "666666"))
+
+                        Text("\(totalExercises) KG")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(AppTheme.successGreen)
+                    }
+                    .fixedSize()
+
+                    HStack(spacing: 4) {
+                        Text("EXERCISES")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(Color(hex: "666666"))
+
+                        Text("\(totalExercises) ITEMS")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(AppTheme.vibrantPurple)
+                    }
+                    .fixedSize()
+                }
             }
 
-            Spacer()
+            // Play button
+            Image(systemName: "play.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(Color(hex: "666666"))
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle()
+                        .fill(Color(hex: "2A2A2A"))
+                )
         }
-        .padding()
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: "1A1A1A"))
+        )
+        // fixedSize prevents the card from expanding to fill available width
+        // This ensures the card respects parent padding when used in NavigationLink
+        .fixedSize(horizontal: true, vertical: false)
     }
 
-    // MARK: - Programs ScrollView
-
-    private var programsScrollView: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                ForEach(viewModel.filteredPrograms) { program in
-                    NavigationLink {
-                        ProgramDetailView_Premium(program: program, viewModel: viewModel)
-                    } label: {
-                        PremiumProgramCard(
-                            program: program,
-                            gradient: determineGradient(for: program)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button(action: {
-                            programToEdit = program
-                        }) {
-                            Label("Edit", systemImage: "pencil")
-                        }
-
-                        Button(action: {
-                            Task { await viewModel.copyProgram(program) }
-                        }) {
-                            Label("Copy", systemImage: "doc.on.doc")
-                        }
-
-                        Button(action: {
-                            shareItems = viewModel.getShareItems(for: program)
-                            showShareSheet = true
-                        }) {
-                            Label("Share", systemImage: "square.and.arrow.up")
-                        }
-
-                        Divider()
-
-                        Button(role: .destructive, action: {
-                            programToDelete = program
-                            showDeleteConfirmation = true
-                        }) {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-                }
-            }
-            .padding(AppTheme.Layout.screenPadding)
-            .padding(.bottom, 80) // Space for tab bar
-        }
+    private var totalExercises: Int {
+        program.days.reduce(0) { $0 + $1.exercises.count }
     }
 
-    // MARK: - Gradient Logic
-
-    private func determineGradient(for program: Program) -> LinearGradient {
-        // Rotate through gradients based on program index
-        let index = viewModel.filteredPrograms.firstIndex(where: { $0.id == program.id }) ?? 0
-        let gradients = [
-            AppTheme.primaryGradient,
-            AppTheme.secondaryGradient,
-            AppTheme.accentGradient,
-            AppTheme.energyGradient,
-            AppTheme.volumeGradient,
-            AppTheme.streakGradient
-        ]
-        return gradients[index % gradients.count]
+    private var exercisePreview: String {
+        let allExercises = program.days.flatMap { $0.exercises }
+        let names = allExercises.prefix(3).map { $0.name }
+        return names.joined(separator: ", ")
     }
 }
 

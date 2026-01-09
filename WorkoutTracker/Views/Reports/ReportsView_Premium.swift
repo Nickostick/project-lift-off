@@ -17,27 +17,23 @@ struct ReportsView_Premium: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background
-                backgroundLayer
+                // Pure black background
+                Color.black.ignoresSafeArea()
 
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
-                        // Title
-                        HStack {
-                            Text("Your Progress")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundStyle(.white)
-                            Spacer()
-                        }
-                        .padding(.horizontal, AppTheme.Layout.screenPadding)
+                        // Header
+                        headerSection
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
 
                         // Time range selector
                         timeRangePicker
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                            .padding(.horizontal, 16)
 
                         // Summary stats grid
                         summaryStatsGrid
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                            .padding(.horizontal, 16)
 
                         // Charts section
                         if !viewModel.weeklyVolumeData.isEmpty {
@@ -50,12 +46,15 @@ struct ReportsView_Premium: View {
 
                         // Personal Records
                         prSection
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                            .padding(.horizontal, 16)
 
                         // Exercise Progress
                         exerciseProgressSection
+
+                        // Spacer for tab bar
+                        Color.clear.frame(height: 80)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.vertical, 16)
                 }
             }
             .toolbar {
@@ -116,21 +115,31 @@ struct ReportsView_Premium: View {
         }
     }
 
-    // MARK: - Background Layer
+    // MARK: - Header Section
 
-    private var backgroundLayer: some View {
-        ZStack {
-            AppTheme.darkBackground
-                .ignoresSafeArea()
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
 
-            GeometryReader { geo in
-                AppTheme.backgroundOrb(color: AppTheme.cyan, size: 200, blur: 70)
-                    .offset(x: geo.size.width * 0.8, y: 50)
-
-                AppTheme.backgroundOrb(color: AppTheme.neonGreen, size: 180, blur: 65)
-                    .offset(x: -50, y: geo.size.height * 0.6)
+                Text("ANALYTICS")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
             }
+
+            Text("Progress")
+                .font(.system(size: 32, weight: .semibold))
+                .foregroundStyle(.white)
+
+            Text("Track your performance and achievements over time.")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(Color(hex: "999999"))
+                .padding(.top, 4)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Time Range Picker
@@ -169,40 +178,36 @@ struct ReportsView_Premium: View {
     private var summaryStatsGrid: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                PremiumStatCard(
-                    title: "Workouts",
+                MinimalStatCard(
+                    title: "WORKOUTS",
                     value: "\(viewModel.totalWorkouts)",
-                    icon: "figure.strengthtraining.traditional",
-                    gradient: AppTheme.workoutCountGradient
+                    icon: "figure.strengthtraining.traditional"
                 )
 
-                PremiumStatCard(
-                    title: "Volume",
+                MinimalStatCard(
+                    title: "VOLUME",
                     value: formatVolumeShort(viewModel.totalVolume),
                     icon: "scalemass.fill",
-                    gradient: AppTheme.volumeGradient,
                     subtitle: "lbs total"
                 )
             }
-            .frame(height: 160)
+            .frame(height: 140)
 
             HStack(spacing: 12) {
-                PremiumStatCard(
-                    title: "Avg Duration",
+                MinimalStatCard(
+                    title: "AVG DURATION",
                     value: viewModel.averageWorkoutDuration.formattedDuration,
-                    icon: "clock.fill",
-                    gradient: AppTheme.durationGradient
+                    icon: "clock.fill"
                 )
 
-                PremiumStatCard(
-                    title: "This Week",
+                MinimalStatCard(
+                    title: "THIS WEEK",
                     value: "\(viewModel.workoutsThisWeek)",
                     icon: "calendar",
-                    gradient: AppTheme.streakGradient,
                     subtitle: "workouts"
                 )
             }
-            .frame(height: 160)
+            .frame(height: 140)
         }
     }
 
@@ -210,11 +215,11 @@ struct ReportsView_Premium: View {
 
     private var weeklyVolumeChart: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Weekly Volume")
-                .font(AppTheme.Typography.title2)
-                .fontWeight(.medium)
-                .foregroundStyle(AppTheme.textPrimary)
-                .padding(.horizontal, AppTheme.Layout.screenPadding)
+            Text("WEEKLY VOLUME")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "666666"))
+                .tracking(0.8)
+                .padding(.horizontal, 16)
 
             VStack(alignment: .leading, spacing: 12) {
                 Chart(viewModel.weeklyVolumeData) { point in
@@ -222,25 +227,19 @@ struct ReportsView_Premium: View {
                         x: .value("Week", point.weekLabel),
                         y: .value("Volume", point.volume)
                     )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [AppTheme.neonGreen, AppTheme.hotPink],
-                            startPoint: .bottom,
-                            endPoint: .top
-                        )
-                    )
+                    .foregroundStyle(AppTheme.successGreen)
                     .cornerRadius(6)
                 }
-                .frame(height: 220)
+                .frame(height: 200)
                 .chartYAxis {
                     AxisMarks(position: .leading) { value in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [5]))
-                            .foregroundStyle(Color(.separator).opacity(0.3))
+                            .foregroundStyle(Color(hex: "2A2A2A"))
                         AxisValueLabel {
                             if let volume = value.as(Double.self) {
                                 Text(formatVolume(volume))
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(AppTheme.textSecondary)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(Color(hex: "666666"))
                             }
                         }
                     }
@@ -248,15 +247,15 @@ struct ReportsView_Premium: View {
                 .chartXAxis {
                     AxisMarks { _ in
                         AxisValueLabel()
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(hex: "666666"))
                     }
                 }
                 .padding(20)
             }
-            .background(AppTheme.cardBackground)
-            .cornerRadius(AppTheme.Layout.cardCornerRadius)
-            .padding(.horizontal, AppTheme.Layout.screenPadding)
+            .background(Color(hex: "1A1A1A"))
+            .cornerRadius(16)
+            .padding(.horizontal, 16)
         }
     }
 
@@ -264,11 +263,11 @@ struct ReportsView_Premium: View {
 
     private var workoutFrequencyChart: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("This Week's Activity")
-                .font(AppTheme.Typography.title2)
-                .fontWeight(.medium)
-                .foregroundStyle(AppTheme.textPrimary)
-                .padding(.horizontal, AppTheme.Layout.screenPadding)
+            Text("THIS WEEK'S ACTIVITY")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "666666"))
+                .tracking(0.8)
+                .padding(.horizontal, 16)
 
             VStack(alignment: .leading, spacing: 12) {
                 Chart(viewModel.workoutFrequencyData) { point in
@@ -278,16 +277,8 @@ struct ReportsView_Premium: View {
                     )
                     .foregroundStyle(
                         point.count > 0
-                            ? LinearGradient(
-                                colors: [AppTheme.successGreen, AppTheme.cyan],
-                                startPoint: .bottom,
-                                endPoint: .top
-                            )
-                            : LinearGradient(
-                                colors: [Color(.separator).opacity(0.3)],
-                                startPoint: .bottom,
-                                endPoint: .top
-                            )
+                            ? AppTheme.primaryBlue
+                            : Color(hex: "2A2A2A")
                     )
                     .cornerRadius(6)
                 }
@@ -296,24 +287,24 @@ struct ReportsView_Premium: View {
                 .chartYAxis {
                     AxisMarks(position: .leading, values: [0, 1, 2, 3]) { value in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [5]))
-                            .foregroundStyle(Color(.separator).opacity(0.3))
+                            .foregroundStyle(Color(hex: "2A2A2A"))
                         AxisValueLabel()
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(hex: "666666"))
                     }
                 }
                 .chartXAxis {
                     AxisMarks { _ in
                         AxisValueLabel()
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(hex: "666666"))
                     }
                 }
                 .padding(20)
             }
-            .background(AppTheme.cardBackground)
-            .cornerRadius(AppTheme.Layout.cardCornerRadius)
-            .padding(.horizontal, AppTheme.Layout.screenPadding)
+            .background(Color(hex: "1A1A1A"))
+            .cornerRadius(16)
+            .padding(.horizontal, 16)
         }
     }
 
@@ -322,22 +313,17 @@ struct ReportsView_Premium: View {
     private var prSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Personal Records")
-                    .font(AppTheme.Typography.title2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(AppTheme.textPrimary)
+                Text("PERSONAL RECORDS")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
 
                 Spacer()
 
-                Text("\(viewModel.allPRs.count) total")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule()
-                            .fill(AppTheme.cardBackground)
-                    )
+                Text("\(viewModel.allPRs.count) TOTAL")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.5)
             }
 
             if viewModel.allPRs.isEmpty {
@@ -345,12 +331,11 @@ struct ReportsView_Premium: View {
             } else {
                 VStack(spacing: 12) {
                     ForEach(viewModel.recentPRs) { pr in
-                        PRAchievementCard(
+                        MinimalPRCard(
                             exerciseName: pr.exerciseName,
                             record: pr.formattedRecord,
                             achievedAt: pr.achievedAt.formattedRelative,
-                            estimated1RM: "\(String(format: "%.0f", pr.estimated1RM)) lbs",
-                            gradient: AppTheme.muscleGroupGradient(for: pr.exerciseName)
+                            estimated1RM: "\(String(format: "%.0f", pr.estimated1RM)) lbs"
                         )
                     }
                 }
@@ -359,34 +344,34 @@ struct ReportsView_Premium: View {
     }
 
     private var emptyPRsView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Image(systemName: "trophy")
                 .font(.system(size: 48, weight: .light))
-                .foregroundStyle(AppTheme.textSecondary)
+                .foregroundStyle(Color(hex: "444444"))
 
             Text("Complete workouts to set PRs")
-                .font(AppTheme.Typography.callout)
-                .foregroundStyle(AppTheme.textSecondary)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(Color(hex: "999999"))
         }
         .frame(maxWidth: .infinity)
-        .padding(40)
-        .background(AppTheme.cardBackground)
-        .cornerRadius(AppTheme.Layout.cardCornerRadius)
+        .frame(height: 180)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(16)
     }
 
     // MARK: - Exercise Progress Section
 
     private var exerciseProgressSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Exercise Progress")
-                .font(AppTheme.Typography.title2)
-                .fontWeight(.medium)
-                .foregroundStyle(AppTheme.textPrimary)
-                .padding(.horizontal, AppTheme.Layout.screenPadding)
+            Text("EXERCISE PROGRESS")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "666666"))
+                .tracking(0.8)
+                .padding(.horizontal, 16)
 
             if viewModel.allPRs.isEmpty {
                 emptyExerciseProgressView
-                    .padding(.horizontal, AppTheme.Layout.screenPadding)
+                    .padding(.horizontal, 16)
             } else {
                 // Exercise selector chips
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -398,16 +383,15 @@ struct ReportsView_Premium: View {
                                     Task { await viewModel.loadExerciseProgress(exerciseName: exercise) }
                                 }
                             }) {
-                                ExerciseChip(
+                                MinimalExerciseChip(
                                     name: exercise,
-                                    isSelected: selectedExercise == exercise,
-                                    gradient: AppTheme.muscleGroupGradient(for: exercise)
+                                    isSelected: selectedExercise == exercise
                                 )
                             }
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, AppTheme.Layout.screenPadding)
+                    .padding(.horizontal, 16)
                 }
 
                 // Progress chart for selected exercise
@@ -415,27 +399,28 @@ struct ReportsView_Premium: View {
                    let progress = viewModel.exerciseProgressData.first(where: { $0.exerciseName == exercise }),
                    !progress.dataPoints.isEmpty {
                     ProgressChartView(progress: progress)
-                        .padding(.horizontal, AppTheme.Layout.screenPadding)
+                        .padding(.horizontal, 16)
                 }
             }
         }
     }
 
     private var emptyExerciseProgressView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(.system(size: 48, weight: .light))
-                .foregroundStyle(AppTheme.textSecondary)
+                .foregroundStyle(Color(hex: "444444"))
 
             Text("Exercise progress charts will appear once you log workouts")
-                .font(AppTheme.Typography.callout)
-                .foregroundStyle(AppTheme.textSecondary)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(Color(hex: "999999"))
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 16)
         }
         .frame(maxWidth: .infinity)
-        .padding(40)
-        .background(AppTheme.cardBackground)
-        .cornerRadius(AppTheme.Layout.cardCornerRadius)
+        .frame(height: 180)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(16)
     }
 
     // MARK: - Helpers
@@ -454,6 +439,118 @@ struct ReportsView_Premium: View {
             return String(format: "%.1fk", volume / 1000)
         }
         return String(format: "%.0f", volume)
+    }
+}
+
+// MARK: - Minimal Stat Card
+
+struct MinimalStatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    var subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color(hex: "666666"))
+
+                Spacer()
+            }
+
+            Spacer()
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(value)
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white)
+
+                HStack(spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(hex: "666666"))
+                        .tracking(0.5)
+
+                    if let subtitle = subtitle {
+                        Text("·")
+                            .foregroundStyle(Color(hex: "444444"))
+                        Text(subtitle)
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundStyle(Color(hex: "999999"))
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(16)
+    }
+}
+
+// MARK: - Minimal PR Card
+
+struct MinimalPRCard: View {
+    let exerciseName: String
+    let record: String
+    let achievedAt: String
+    let estimated1RM: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(exerciseName)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.white)
+
+                Text(record)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(Color(hex: "999999"))
+
+                Text(achievedAt)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(Color(hex: "666666"))
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("1RM EST.")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.5)
+
+                Text(estimated1RM)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.vibrantPurple)
+            }
+        }
+        .padding(16)
+        .background(Color(hex: "1A1A1A"))
+        .cornerRadius(16)
+    }
+}
+
+// MARK: - Minimal Exercise Chip
+
+struct MinimalExerciseChip: View {
+    let name: String
+    let isSelected: Bool
+
+    var body: some View {
+        Text(name)
+            .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+            .foregroundStyle(isSelected ? .white : Color(hex: "999999"))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                isSelected
+                    ? Color(hex: "2A2A2A")
+                    : Color(hex: "1A1A1A")
+            )
+            .cornerRadius(20)
     }
 }
 

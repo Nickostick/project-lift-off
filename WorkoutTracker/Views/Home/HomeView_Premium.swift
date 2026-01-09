@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Premium 2026 HomeView - Bold gradient aesthetic with energetic vibes
+/// Premium Home View - Clean minimal design inspired by professional fitness apps
 struct HomeView_Premium: View {
     @ObservedObject var logViewModel: WorkoutLogViewModel
     @ObservedObject var programViewModel: ProgramViewModel
@@ -12,41 +12,39 @@ struct HomeView_Premium: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background with subtle orbs
-                backgroundLayer
+                // Pure black background
+                Color.black.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Welcome Section
-                        welcomeSection
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        // Header Section
+                        headerSection
+                            .padding(.horizontal, 20)
+                            .padding(.top, 8)
 
-                        // Hero Volume Card
-                        heroVolumeCard
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                        // Summary Status Card
+                        summaryCard
+                            .padding(.horizontal, 20)
 
-                        // Quick Stats Grid
+                        // Stats Grid
                         statsGrid
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                            .padding(.horizontal, 20)
 
-                        // Quick Start CTA
-                        quickStartCTA
-                            .padding(.horizontal, AppTheme.Layout.screenPadding)
+                        // Quick Start Section
+                        quickStartSection
+                            .padding(.horizontal, 20)
 
                         // Recent Workouts
-                        recentWorkoutsSection
-
-                        // Personal Records
-                        if !logViewModel.personalRecords.isEmpty {
-                            prSection
-                                .padding(.horizontal, AppTheme.Layout.screenPadding)
+                        if !logViewModel.recentLogs.isEmpty {
+                            recentWorkoutsSection
+                                .padding(.top, 8)
                         }
+
+                        // Spacer for tab bar
+                        Color.clear.frame(height: 80)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.vertical, 16)
                 }
-            }
-            .refreshable {
-                // Triggers data refresh via listeners
             }
             .sheet(isPresented: $showStartWorkout) {
                 StartWorkoutSheet(
@@ -67,108 +65,227 @@ struct HomeView_Premium: View {
         }
     }
 
-    // MARK: - Background Layer
+    // MARK: - Header Section
 
-    private var backgroundLayer: some View {
-        AppTheme.darkBackground.ignoresSafeArea()
-    }
+    private var headerSection: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Date().formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .textCase(.uppercase)
+                    .tracking(0.5)
 
-    // MARK: - Welcome Section
-
-    private var welcomeSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(greeting)
-                    .font(AppTheme.Typography.largeTitle)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(AppTheme.textPrimary)
-
-                Text(Date().formatted(.dateTime.weekday(.wide).month().day()))
-                    .font(AppTheme.Typography.callout)
-                    .foregroundStyle(AppTheme.textSecondary)
+                Text("Daily Activity")
+                    .font(.system(size: 32, weight: .semibold))
+                    .foregroundStyle(.white)
             }
 
             Spacer()
 
-            // Profile circle
+            // Profile icon
             Circle()
-                .fill(AppTheme.cardBackground)
-                .frame(width: 48, height: 48)
+                .fill(Color(hex: "1A1A1A"))
+                .frame(width: 40, height: 40)
                 .overlay(
                     Image(systemName: "person.fill")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(AppTheme.textSecondary)
+                        .font(.system(size: 18))
+                        .foregroundStyle(Color(hex: "666666"))
                 )
         }
     }
 
-    private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 0..<12:
-            return "Good Morning"
-        case 12..<17:
-            return "Good Afternoon"
-        default:
-            return "Good Evening"
+    // MARK: - Summary Card
+
+    private var summaryCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("WEEKLY PROGRESS")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(hex: "666666"))
+                        .tracking(0.8)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(logViewModel.workoutsThisWeek)")
+                            .font(.system(size: 36, weight: .semibold))
+                            .foregroundStyle(.white)
+
+                        Text("workouts")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundStyle(Color(hex: "999999"))
+                    }
+                }
+
+                Spacer()
+
+                // Icon with background
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.primaryBlue.opacity(0.15))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .font(.system(size: 22))
+                        .foregroundStyle(AppTheme.primaryBlue)
+                }
+            }
         }
-    }
-
-    // MARK: - Hero Volume Card
-
-    private var heroVolumeCard: some View {
-        HeroStatCard(
-            title: "Volume This Week",
-            value: logViewModel.totalVolumeThisWeek.formattedVolume + " lbs",
-            icon: "scalemass.fill",
-            gradient: AppTheme.volumeGradient,
-            trend: calculateWeeklyTrend(),
-            trendUp: true
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: "1A1A1A"))
         )
-        .accessibilityLabel("Weekly volume: \(logViewModel.totalVolumeThisWeek.formattedVolume) pounds")
-    }
-
-    private func calculateWeeklyTrend() -> String? {
-        // Placeholder for trend calculation
-        // Could compare to previous week's volume
-        return nil
     }
 
     // MARK: - Stats Grid
 
     private var statsGrid: some View {
         HStack(spacing: 12) {
-            PremiumStatCard(
-                title: "Workouts",
-                value: "\(logViewModel.workoutsThisWeek)",
-                icon: "figure.strengthtraining.traditional",
-                gradient: AppTheme.workoutCountGradient,
-                subtitle: "This week"
+            // Volume Card
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: "scalemass.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color(hex: "666666"))
+
+                    Spacer()
+
+                    // Small trend indicator
+                    HStack(spacing: 2) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 9, weight: .bold))
+                        Text(logViewModel.workoutsThisWeek > 0 ? "+2.4k" : "0")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(AppTheme.successGreen)
+                }
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(format: "%.1fk", logViewModel.totalVolumeThisWeek / 1000))
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(.white)
+
+                    Text("VOLUME")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(hex: "666666"))
+                        .tracking(0.5)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .frame(height: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(hex: "1A1A1A"))
             )
 
-            PremiumStatCard(
-                title: "PRs",
-                value: "\(logViewModel.personalRecords.count)",
-                icon: "trophy.fill",
-                gradient: AppTheme.prGradient,
-                subtitle: "All time"
+            // PRs Card
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color(hex: "666666"))
+
+                    Spacer()
+
+                    // Small indicator
+                    HStack(spacing: 2) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 9, weight: .bold))
+                        Text(logViewModel.personalRecords.isEmpty ? "0" : "+\(min(logViewModel.personalRecords.count, 5))")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(AppTheme.vibrantPurple)
+                }
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(logViewModel.personalRecords.count)")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(.white)
+
+                    Text("PERSONAL RECORDS")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(hex: "666666"))
+                        .tracking(0.5)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .frame(height: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(hex: "1A1A1A"))
             )
         }
-        .frame(height: 160)
     }
 
-    // MARK: - Quick Start CTA
+    // MARK: - Quick Start Section
 
-    private var quickStartCTA: some View {
-        GlowingCTAButton(
-            title: "Start Workout",
-            subtitle: "Choose a template or start fresh",
-            icon: "play.fill",
-            gradient: AppTheme.energyGradient,
-            action: { showStartWorkout = true }
-        )
-        .accessibilityLabel("Start workout")
-        .accessibilityHint("Opens workout template selection")
+    private var quickStartSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("QUICK START")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
+
+                Spacer()
+
+                Text("FAVORITES")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(hex: "444444"))
+                    .tracking(0.5)
+            }
+
+            // Start Workout Card
+            Button(action: { showStartWorkout = true }) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "figure.strengthtraining.traditional")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppTheme.primaryBlue)
+
+                            Text("STRENGTH")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color(hex: "666666"))
+                                .tracking(0.8)
+                        }
+
+                        Text("Start Workout")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(.white)
+
+                        Text("Choose a template or quick start")
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(Color(hex: "999999"))
+                    }
+
+                    Spacer()
+
+                    // Play button
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            Circle()
+                                .fill(Color(hex: "2A2A2A"))
+                        )
+                }
+                .padding(18)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(hex: "1A1A1A"))
+                )
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     // MARK: - Recent Workouts Section
@@ -176,129 +293,93 @@ struct HomeView_Premium: View {
     private var recentWorkoutsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Recent Workouts")
-                    .font(AppTheme.Typography.title2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(AppTheme.textPrimary)
+                Text("RECENT")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .tracking(0.8)
 
                 Spacer()
 
                 NavigationLink {
                     LogListView(viewModel: logViewModel)
                 } label: {
-                    Text("See All")
-                        .font(AppTheme.Typography.callout)
-                        .foregroundStyle(AppTheme.neonGreen)
-                }
-            }
-            .padding(.horizontal, AppTheme.Layout.screenPadding)
-
-            if logViewModel.recentLogs.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "dumbbell")
-                        .font(.system(size: 48, weight: .light))
-                        .foregroundStyle(AppTheme.textSecondary)
-
-                    Text("No Workouts Yet")
-                        .font(AppTheme.Typography.headline)
-                        .foregroundStyle(AppTheme.textPrimary)
-
-                    Text("Start your first workout to see it here")
-                        .font(AppTheme.Typography.caption)
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 180)
-                .background(AppTheme.cardBackground)
-                .cornerRadius(AppTheme.Layout.cardCornerRadius)
-                .padding(.horizontal, AppTheme.Layout.screenPadding)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(logViewModel.recentLogs.prefix(5)) { log in
-                            NavigationLink {
-                                LogDetailView(log: log)
-                            } label: {
-                                PremiumRecentWorkoutCard(log: log)
-                            }
-                            .buttonStyle(.plain)
-                        }
+                    HStack(spacing: 4) {
+                        Text("View All")
+                            .font(.system(size: 13, weight: .medium))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
                     }
-                    .padding(.horizontal, AppTheme.Layout.screenPadding)
+                    .foregroundStyle(Color(hex: "666666"))
                 }
             }
-        }
-    }
+            .padding(.horizontal, 20)
 
-    // MARK: - PR Section
-
-    private var prSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Recent PRs")
-                .font(AppTheme.Typography.title2)
-                .fontWeight(.medium)
-                .foregroundStyle(AppTheme.textPrimary)
-
-            VStack(spacing: 12) {
-                ForEach(logViewModel.personalRecords.prefix(3)) { pr in
-                    PRAchievementCard(
-                        exerciseName: pr.exerciseName,
-                        record: pr.formattedRecord,
-                        achievedAt: pr.achievedAt.formattedRelative,
-                        estimated1RM: "\(String(format: "%.0f", pr.estimated1RM)) lbs",
-                        gradient: AppTheme.muscleGroupGradient(for: pr.exerciseName)
-                    )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(logViewModel.recentLogs.prefix(5)) { log in
+                        NavigationLink {
+                            LogDetailView(log: log)
+                        } label: {
+                            MinimalWorkoutCard(log: log)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
+                .padding(.horizontal, 20)
             }
         }
     }
 }
 
-// MARK: - Premium Recent Workout Card
+// MARK: - Minimal Workout Card
 
-struct PremiumRecentWorkoutCard: View {
+struct MinimalWorkoutCard: View {
     let log: WorkoutLog
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Date badge
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(log.startedAt.formatted(.dateTime.day()))
-                        .font(.system(size: 28, weight: .semibold, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(log.startedAt.formatted(.dateTime.month(.abbreviated)))
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-
-                Spacer()
+            // Date
+            VStack(alignment: .leading, spacing: 2) {
+                Text(log.startedAt.formatted(.dateTime.day()))
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(.white)
+                Text(log.startedAt.formatted(.dateTime.month(.abbreviated).year()))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(hex: "666666"))
+                    .textCase(.uppercase)
             }
 
             Spacer()
 
             // Workout name
             Text(log.dayName)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(AppTheme.textPrimary)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.white)
                 .lineLimit(2)
+                .minimumScaleFactor(0.9)
 
             // Stats
-            VStack(alignment: .leading, spacing: 6) {
-                Label("\(log.exercises.count) exercises", systemImage: "dumbbell.fill")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(AppTheme.textSecondary)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("\(log.exercises.count)")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("exercises")
+                        .font(.system(size: 12, weight: .regular))
+                }
+                .foregroundStyle(Color(hex: "999999"))
 
-                Label(log.formattedDuration, systemImage: "clock.fill")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(AppTheme.textSecondary)
+                HStack(spacing: 6) {
+                    Text(log.formattedDuration)
+                        .font(.system(size: 12, weight: .regular))
+                }
+                .foregroundStyle(Color(hex: "999999"))
             }
         }
         .padding(16)
         .frame(width: 160, height: 180)
         .background(
-            RoundedRectangle(cornerRadius: AppTheme.Layout.cardCornerRadius)
-                .fill(AppTheme.cardBackground)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: "1A1A1A"))
         )
     }
 }

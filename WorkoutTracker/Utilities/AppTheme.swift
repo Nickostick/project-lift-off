@@ -1,13 +1,22 @@
 import SwiftUI
 
 /// Dark Theme Fitness App System
-/// Black background with neon green accents
+/// Black background with blue and multi-color accents
 enum AppTheme {
 
     // MARK: - Color Palette (Dark Theme)
 
-    /// Neon green accent color (primary)
-    static let neonGreen = Color(hex: "D4FF00")
+    /// Primary blue accent color
+    static let primaryBlue = Color(hex: "5B7FE8")
+
+    /// Additional accent colors
+    static let accentOrange = Color(hex: "FF6B35")
+    static let accentPurple = Color(hex: "A855F7") // Vibrant purple from image
+    static let accentGreen = Color(hex: "10B981") // Bright green from image
+    static let accentTeal = Color(hex: "4ECDC4")
+
+    /// Main accent (for backwards compatibility)
+    static let neonGreen = Color(hex: "5B7FE8") // Now blue
 
     /// Orange accent for labels
     static let orangeAccent = Color(hex: "FF6B35")
@@ -22,27 +31,27 @@ enum AppTheme {
     static let textSecondary = Color(hex: "A0A0A0")
     static let textTertiary = Color(hex: "666666")
 
-    /// Primary flat colors (now neon green)
+    /// Primary flat colors (now blue)
     static let primaryGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "5B7FE8")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let secondaryGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "A855F7")], // Vibrant Purple
         startPoint: .leading,
         endPoint: .trailing
     )
 
     static let accentGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "10B981")], // Bright Green
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let energyGradient = LinearGradient(
-        colors: [Color(hex: "FF6B35")],
+        colors: [Color(hex: "FF6B35")], // Orange
         startPoint: .leading,
         endPoint: .trailing
     )
@@ -52,11 +61,11 @@ enum AppTheme {
     static func muscleGroupGradient(for exerciseName: String) -> LinearGradient {
         let lowerName = exerciseName.lowercased()
 
-        // Chest: Neon Green
+        // Chest: Blue
         if lowerName.contains("bench") || lowerName.contains("chest") ||
            lowerName.contains("fly") || lowerName.contains("press") && lowerName.contains("chest") {
             return LinearGradient(
-                colors: [Color(hex: "D4FF00")],
+                colors: [Color(hex: "5B7FE8")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -73,82 +82,82 @@ enum AppTheme {
             )
         }
 
-        // Back: Neon Green
+        // Back: Green
         if lowerName.contains("row") || lowerName.contains("pull") ||
            lowerName.contains("lat") || lowerName.contains("deadlift") {
             return LinearGradient(
-                colors: [Color(hex: "D4FF00")],
+                colors: [Color(hex: "10B981")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         }
 
-        // Shoulders: Orange
+        // Shoulders: Purple
         if lowerName.contains("shoulder") || lowerName.contains("lateral") ||
            lowerName.contains("overhead") || lowerName.contains("shrug") ||
            lowerName.contains("raise") {
             return LinearGradient(
-                colors: [Color(hex: "FF6B35")],
+                colors: [Color(hex: "A855F7")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         }
 
-        // Arms: Neon Green
+        // Arms: Blue
         if lowerName.contains("curl") || lowerName.contains("tricep") ||
            lowerName.contains("bicep") || lowerName.contains("arm") {
             return LinearGradient(
-                colors: [Color(hex: "D4FF00")],
+                colors: [Color(hex: "5B7FE8")],
                 startPoint: .leading,
                 endPoint: .trailing
             )
         }
 
-        // Default: Neon green
+        // Default: Blue
         return primaryGradient
     }
 
     // MARK: - Stat Type Flat Colors
 
     static let volumeGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "10B981")], // Green
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let workoutCountGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "5B7FE8")], // Blue
         startPoint: .leading,
         endPoint: .trailing
     )
 
     static let durationGradient = LinearGradient(
-        colors: [Color(hex: "FF6B35")],
+        colors: [Color(hex: "FF6B35")], // Orange
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let prGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "A855F7")], // Purple
         startPoint: .leading,
         endPoint: .trailing
     )
 
     static let streakGradient = LinearGradient(
-        colors: [Color(hex: "D4FF00")],
+        colors: [Color(hex: "A855F7")], // Purple
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     // MARK: - Solid Colors (for icons, text accents)
 
-    static let electricBlue = Color(hex: "D4FF00") // Changed to neon green
-    static let vibrantPurple = Color(hex: "D4FF00") // Changed to neon green
-    static let hotPink = Color(hex: "FF6B35") // Changed to orange
+    static let electricBlue = Color(hex: "5B7FE8")
+    static let vibrantPurple = Color(hex: "A855F7")
+    static let hotPink = Color(hex: "FF6B35")
     static let energyOrange = Color(hex: "FF6B35")
-    static let successGreen = Color(hex: "D4FF00")
-    static let goldPR = Color(hex: "D4FF00")
-    static let cyan = Color(hex: "D4FF00")
+    static let successGreen = Color(hex: "10B981") // Bright green
+    static let goldPR = Color(hex: "A855F7") // Purple for PRs
+    static let cyan = Color(hex: "4ECDC4")
 
     // MARK: - Background Elements
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Premium 2026 Custom TabBar with gradient selection indicators
+/// Premium Custom TabBar - Clean minimal design
 struct PremiumTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
     let onStartWorkout: () -> Void
@@ -10,11 +10,10 @@ struct PremiumTabBar: View {
     var body: some View {
         HStack(spacing: 0) {
             // Home
-            PremiumTabButton(
+            MinimalTabButton(
                 icon: "house.fill",
-                title: "Home",
                 isSelected: selectedTab == .home,
-                animation: animation
+                color: AppTheme.primaryBlue
             ) {
                 withAnimation(AppTheme.Animation.spring) {
                     selectedTab = .home
@@ -24,11 +23,10 @@ struct PremiumTabBar: View {
             Spacer()
 
             // Programs
-            PremiumTabButton(
+            MinimalTabButton(
                 icon: "doc.text.fill",
-                title: "Programs",
                 isSelected: selectedTab == .programs,
-                animation: animation
+                color: AppTheme.accentPurple
             ) {
                 withAnimation(AppTheme.Animation.spring) {
                     selectedTab = .programs
@@ -39,16 +37,15 @@ struct PremiumTabBar: View {
 
             // Start Workout Button (Center)
             startWorkoutButton
-                .offset(y: -20)
+                .offset(y: -12)
 
             Spacer()
 
             // Reports
-            PremiumTabButton(
+            MinimalTabButton(
                 icon: "chart.bar.fill",
-                title: "Reports",
                 isSelected: selectedTab == .reports,
-                animation: animation
+                color: AppTheme.accentGreen
             ) {
                 withAnimation(AppTheme.Animation.spring) {
                     selectedTab = .reports
@@ -58,24 +55,29 @@ struct PremiumTabBar: View {
             Spacer()
 
             // Settings
-            PremiumTabButton(
+            MinimalTabButton(
                 icon: "gearshape.fill",
-                title: "Settings",
                 isSelected: selectedTab == .settings,
-                animation: animation
+                color: AppTheme.accentOrange
             ) {
                 withAnimation(AppTheme.Animation.spring) {
                     selectedTab = .settings
                 }
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
         .padding(.top, 8)
-        .padding(.bottom, 2)
+        .padding(.bottom, 6)
         .background(
             Rectangle()
-                .fill(AppTheme.cardBackground)
+                .fill(Color(hex: "0A0A0A"))
                 .ignoresSafeArea()
+                .overlay(
+                    Rectangle()
+                        .fill(Color(hex: "1A1A1A"))
+                        .frame(height: 0.5),
+                    alignment: .top
+                )
         )
     }
 
@@ -83,97 +85,38 @@ struct PremiumTabBar: View {
 
     private var startWorkoutButton: some View {
         Button(action: onStartWorkout) {
-            ZStack {
-                // Outer glow
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                AppTheme.neonGreen.opacity(0.3),
-                                .clear
-                            ],
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 50
-                        )
-                    )
-                    .frame(width: 80, height: 80)
-                    .blur(radius: 8)
-
-                // Solid circle
-                Circle()
-                    .fill(AppTheme.neonGreen)
-                    .frame(width: 64, height: 64)
-                    .shadow(color: AppTheme.neonGreen.opacity(0.4), radius: 16, x: 0, y: 8)
-
-                // Plus icon
-                Image(systemName: "plus")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(AppTheme.darkBackground)
-            }
+            Circle()
+                .fill(AppTheme.primaryBlue)
+                .frame(width: 44, height: 44)
+                .overlay(
+                    Image(systemName: "plus")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.black)
+                )
         }
         .buttonStyle(ScaleButtonStyle())
         .accessibilityLabel("Start workout")
     }
 }
 
-// MARK: - Premium Tab Button
+// MARK: - Minimal Tab Button
 
-struct PremiumTabButton: View {
+struct MinimalTabButton: View {
     let icon: String
-    let title: String
     let isSelected: Bool
-    let animation: Namespace.ID
+    let color: Color
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
-                // Icon
-                ZStack {
-                    if isSelected {
-                        // Glow background
-                        Circle()
-                            .fill(
-                                RadialGradient(
-                                    colors: [
-                                        AppTheme.neonGreen.opacity(0.3),
-                                        .clear
-                                    ],
-                                    center: .center,
-                                    startRadius: 10,
-                                    endRadius: 25
-                                )
-                            )
-                            .frame(width: 50, height: 50)
-                            .blur(radius: 4)
-                    }
-
-                    Image(systemName: icon)
-                        .font(.system(size: 24, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? AppTheme.neonGreen : Color(.secondaryLabel))
-                        .symbolRenderingMode(.hierarchical)
-                }
-                .frame(height: 32)
-
-                // Label
-                Text(title)
-                    .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? AppTheme.neonGreen : Color(.secondaryLabel))
-
-                // Selection indicator (underline)
-                if isSelected {
-                    Capsule()
-                        .fill(AppTheme.neonGreen)
-                        .frame(width: 32, height: 4)
-                        .matchedGeometryEffect(id: "TAB_SELECTION", in: animation)
-                } else {
-                    Capsule()
-                        .fill(Color.clear)
-                        .frame(width: 32, height: 4)
-                }
+            VStack(spacing: 0) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? color : Color(hex: "666666"))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(height: 24)
             }
-            .frame(width: 70)
+            .frame(width: 44)
         }
         .buttonStyle(.plain)
     }
