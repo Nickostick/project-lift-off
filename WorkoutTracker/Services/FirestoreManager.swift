@@ -355,4 +355,101 @@ final class FirestoreManager {
         
         return Array(dataPoints.suffix(limit))
     }
+
+    // MARK: - User Level Operations
+
+    /// Fetch user level data with real-time updates
+    func fetchUserLevel(userId: String) -> AnyPublisher<UserLevel?, Error> {
+        let subject = PassthroughSubject<UserLevel?, Error>()
+
+        db.collection(Constants.Collections.userLevels)
+            .whereField("userId", isEqualTo: userId)
+            .limit(to: 1)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("❌ Firestore error fetching user level: \(error.localizedDescription)")
+                    subject.send(nil)
+                    return
+                }
+
+                guard let document = snapshot?.documents.first else {
+                    // No level data exists yet
+                    subject.send(nil)
+                    return
+                }
+
+                var data = document.data()
+                // Convert Firestore Timestamps to Date
+                if let timestamp = data["updatedAt"] as? Timestamp {
+                    data["updatedAt"] = timestamp.dateValue()
+                }
+                if let timestamp = data["lastLevelUpDate"] as? Timestamp {
+                    data["lastLevelUpDate"] = timestamp.dateValue()
+                }
+
+                subject.send(UserLevel(from: data))
+            }
+
+        return subject.eraseToAnyPublisher()
+    }
+
+    /// Save or update user level
+    func saveUserLevel(_ userLevel: UserLevel) async throws {
+        var updatedLevel = userLevel
+        updatedLevel.updatedAt = Date()
+
+        try await db.collection(Constants.Collections.userLevels)
+            .document(userLevel.id)
+            .setData(updatedLevel.firestoreData)
+
+        print("✅ User level saved: Level \(userLevel.currentLevel)")
+    }
+
+    /// Initialize user level for new users
+    func initializeUserLevel(userId: String) async throws -> UserLevel {
+        let userLevel = UserLevel(userId: userId)
+        try await saveUserLevel(userLevel)
+        return userLevel
+    }
+
+    /// Award XP and update level
+    /// Returns: (updatedUserLevel, didLevelUp, previousLevel)
+    func awardXP(
+        userId: String,
+        xpAmount: Int,
+        currentLevel: UserLevel?
+    ) async throws -> (UserLevel, Bool, Int?) {
+        // Get or create user level
+        let level: UserLevel
+        if let existingLevel = currentLevel {
+            level = existingLevel
+        } else {
+            level = try await initializeUserLevel(userId: userId)
+        }
+
+        // Calculate new state
+        let result = LevelingService.addXP(
+            currentLevel: level.currentLevel,
+            currentXP: level.currentXP,
+            totalXP: level.totalXP,
+            earnedXP: xpAmount
+        )
+
+        let previousLevel = level.currentLevel
+
+        // Create updated level
+        var updatedLevel = level
+        updatedLevel.currentLevel = result.newLevel
+        updatedLevel.currentXP = result.newCurrentXP
+        updatedLevel.totalXP = result.newTotalXP
+
+        if result.leveledUp {
+            updatedLevel.lastLevelUpDate = Date()
+        }
+
+        // Save to Firestore
+        try await saveUserLevel(updatedLevel)
+
+        return (updatedLevel, result.leveledUp, result.leveledUp ? previousLevel : nil)
+    }
 }

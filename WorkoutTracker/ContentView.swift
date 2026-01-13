@@ -23,6 +23,7 @@ struct MainTabView: View {
     
     @StateObject private var programViewModel: ProgramViewModel
     @StateObject private var logViewModel: WorkoutLogViewModel
+    @StateObject private var levelViewModel: LevelViewModel
     @State private var selectedTab = Tab.home
     @State private var showStartWorkout = false
     
@@ -33,7 +34,15 @@ struct MainTabView: View {
     init(userId: String) {
         self.userId = userId
         _programViewModel = StateObject(wrappedValue: ProgramViewModel(userId: userId))
-        _logViewModel = StateObject(wrappedValue: WorkoutLogViewModel(userId: userId))
+
+        let logVM = WorkoutLogViewModel(userId: userId)
+        let levelVM = LevelViewModel(userId: userId)
+
+        // Connect ViewModels
+        logVM.levelViewModel = levelVM
+
+        _logViewModel = StateObject(wrappedValue: logVM)
+        _levelViewModel = StateObject(wrappedValue: levelVM)
     }
     
     var body: some View {
@@ -42,7 +51,7 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .home:
-                    HomeView_Premium(logViewModel: logViewModel, programViewModel: programViewModel)
+                    HomeView_Premium(logViewModel: logViewModel, programViewModel: programViewModel, levelViewModel: levelViewModel)
                 case .programs:
                     ProgramListView_Premium(viewModel: programViewModel)
                 case .reports:

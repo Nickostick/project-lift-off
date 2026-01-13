@@ -4,6 +4,7 @@ import SwiftUI
 struct HomeView_Premium: View {
     @ObservedObject var logViewModel: WorkoutLogViewModel
     @ObservedObject var programViewModel: ProgramViewModel
+    @ObservedObject var levelViewModel: LevelViewModel
 
     @State private var showStartWorkout = false
     @State private var selectedProgram: Program?
@@ -22,8 +23,8 @@ struct HomeView_Premium: View {
                             .padding(.horizontal, 20)
                             .padding(.top, 8)
 
-                        // Summary Status Card
-                        summaryCard
+                        // Summary Cards Section
+                        summaryCardsSection
                             .padding(.horizontal, 20)
 
                         // Stats Grid
@@ -62,6 +63,17 @@ struct HomeView_Premium: View {
             .fullScreenCover(isPresented: $logViewModel.isWorkoutActive) {
                 ActiveWorkoutView(viewModel: logViewModel)
             }
+            .fullScreenCover(isPresented: $levelViewModel.showLevelUpCelebration) {
+                if let levelUp = levelViewModel.pendingLevelUp {
+                    LevelUpView(
+                        previousLevel: levelUp.previousLevel,
+                        newLevel: levelUp.newLevel,
+                        onDismiss: {
+                            levelViewModel.dismissLevelUp()
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -95,9 +107,26 @@ struct HomeView_Premium: View {
         }
     }
 
-    // MARK: - Summary Card
+    // MARK: - Summary Cards Section
 
-    private var summaryCard: some View {
+    private var summaryCardsSection: some View {
+        VStack(spacing: 12) {
+            // Level Progress Card
+            if let userLevel = levelViewModel.userLevel {
+                LevelProgressCard(
+                    level: userLevel.currentLevel,
+                    currentXP: userLevel.currentXP,
+                    requiredXP: userLevel.xpForNextLevel,
+                    progress: userLevel.progressToNextLevel
+                )
+            }
+
+            // Weekly Progress Card
+            weeklyProgressCard
+        }
+    }
+
+    private var weeklyProgressCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -389,6 +418,7 @@ struct MinimalWorkoutCard: View {
 #Preview {
     HomeView_Premium(
         logViewModel: WorkoutLogViewModel(userId: "preview"),
-        programViewModel: ProgramViewModel(userId: "preview")
+        programViewModel: ProgramViewModel(userId: "preview"),
+        levelViewModel: LevelViewModel(userId: "preview")
     )
 }

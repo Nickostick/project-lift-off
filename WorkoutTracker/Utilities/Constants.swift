@@ -8,6 +8,7 @@ enum Constants {
         static let workoutLogs = "workoutLogs"
         static let personalRecords = "personalRecords"
         static let users = "users"
+        static let userLevels = "userLevels"
     }
     
     /// UserDefaults keys
@@ -40,6 +41,14 @@ enum Constants {
         static let defaultReps = 10
         static let defaultRestSeconds = 60
         static let defaultWeightUnit = WeightUnit.pounds
+    }
+
+    /// XP and leveling constants
+    enum XP {
+        static let baseWorkoutXP = 100
+        static let prMultiplier = 2.0
+        static let levelBaseXP = 100.0
+        static let levelExponent = 1.5
     }
 }
 

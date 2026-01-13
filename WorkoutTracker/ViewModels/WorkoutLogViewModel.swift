@@ -19,6 +19,7 @@ final class WorkoutLogViewModel: ObservableObject {
     // MARK: - Dependencies
     private let firestoreManager: FirestoreManager
     private let userId: String
+    weak var levelViewModel: LevelViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var timerCancellable: AnyCancellable?
     private var workoutStartTime: Date? // Store start time for accurate duration
@@ -221,7 +222,12 @@ final class WorkoutLogViewModel: ObservableObject {
             
             // Save the workout
             try await firestoreManager.saveWorkoutLog(workout)
-            
+
+            // Award XP for workout completion
+            if let levelVM = levelViewModel {
+                await levelVM.awardWorkoutXP(hasPRs: !newPRs.isEmpty)
+            }
+
             // Reset state
             activeWorkout = nil
             isWorkoutActive = false
