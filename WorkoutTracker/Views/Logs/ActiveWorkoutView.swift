@@ -136,7 +136,7 @@ struct ActiveWorkoutView: View {
                 let completed = workout.exercises.reduce(0) { total, ex in
                     total + ex.completedSets.filter { $0.isCompleted }.count
                 }
-                let total = workout.totalSetsCompleted + workout.exercises.reduce(0) { $0 + $1.completedSets.filter { !$0.isCompleted }.count }
+                let total = workout.exercises.reduce(0) { $0 + $1.completedSets.count }
                 
                 VStack(alignment: .trailing) {
                     Text("Sets")

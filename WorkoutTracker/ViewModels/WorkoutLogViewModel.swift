@@ -26,6 +26,10 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
     private var timerCancellable: AnyCancellable?
     private var workoutStartTime: Date? // Store start time for accurate duration
 
+    // MARK: - Persistence Keys
+    private static let activeWorkoutKey = "activeWorkout"
+    private static let workoutStartTimeKey = "activeWorkoutStartTime"
+
     // MARK: - Computed Properties
     var recentLogs: [WorkoutLog] {
         Array(logs.prefix(10))
@@ -52,6 +56,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         self.userId = userId
         self.firestoreManager = firestoreManager
         setupListeners()
+        restoreActiveWorkout()
     }
 
     deinit {
@@ -106,6 +111,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         isWorkoutActive = true
         newPRs = []
         startTimer()
+        persistActiveWorkout()
 
         // Asynchronously fetch history
         Task {
@@ -122,6 +128,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         isWorkoutActive = true
         newPRs = []
         startTimer()
+        persistActiveWorkout()
     }
 
     /// Populate previous performance for the active workout
@@ -149,6 +156,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
 
         // Update on main actor
         activeWorkout = updatedWorkout
+        persistActiveWorkout()
     }
 
     /// Add an exercise to the active workout
@@ -158,6 +166,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         let exerciseLog = ExerciseLog.from(exercise: exercise)
         workout.exercises.append(exerciseLog)
         activeWorkout = workout
+        persistActiveWorkout()
     }
 
     /// Update a set in the active workout
@@ -171,6 +180,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         workout.exercises[exerciseIndex].completedSets[setIndex].isCompleted = isCompleted
 
         activeWorkout = workout
+        persistActiveWorkout()
     }
 
     /// Add a set to an exercise in the active workout
@@ -187,6 +197,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
 
         workout.exercises[exerciseIndex].completedSets.append(newSet)
         activeWorkout = workout
+        persistActiveWorkout()
     }
 
     /// Remove a set from an exercise
@@ -203,6 +214,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         }
 
         activeWorkout = workout
+        persistActiveWorkout()
     }
 
     /// Complete and save the active workout
@@ -256,6 +268,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
             activeWorkout = nil
             isWorkoutActive = false
             workoutTimer = 0
+            clearPersistedWorkout()
 
         } catch {
             handleError(error)
@@ -271,6 +284,7 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         isWorkoutActive = false
         workoutTimer = 0
         newPRs = []
+        clearPersistedWorkout()
     }
 
     /// Refresh timer display (call when view appears after backgrounding)
@@ -330,14 +344,58 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         }
     }
 
+    // MARK: - Workout Persistence
+
+    /// Save active workout state to UserDefaults for crash resilience
+    private func persistActiveWorkout() {
+        guard let workout = activeWorkout else {
+            UserDefaults.standard.removeObject(forKey: Self.activeWorkoutKey)
+            UserDefaults.standard.removeObject(forKey: Self.workoutStartTimeKey)
+            return
+        }
+
+        if let data = try? JSONEncoder().encode(workout) {
+            UserDefaults.standard.set(data, forKey: Self.activeWorkoutKey)
+        }
+        if let startTime = workoutStartTime {
+            UserDefaults.standard.set(startTime, forKey: Self.workoutStartTimeKey)
+        }
+    }
+
+    /// Clear persisted workout state
+    private func clearPersistedWorkout() {
+        UserDefaults.standard.removeObject(forKey: Self.activeWorkoutKey)
+        UserDefaults.standard.removeObject(forKey: Self.workoutStartTimeKey)
+    }
+
+    /// Restore active workout after app crash or restart
+    private func restoreActiveWorkout() {
+        guard let data = UserDefaults.standard.data(forKey: Self.activeWorkoutKey),
+              let workout = try? JSONDecoder().decode(WorkoutLog.self, from: data) else {
+            return
+        }
+
+        activeWorkout = workout
+        isWorkoutActive = true
+
+        // Restore start time and resume timer
+        if let startTime = UserDefaults.standard.object(forKey: Self.workoutStartTimeKey) as? Date {
+            workoutStartTime = startTime
+            workoutTimer = Date().timeIntervalSince(startTime)
+            resumeTimer()
+        }
+    }
+
     // MARK: - Timer
 
     private func startTimer() {
         workoutStartTime = Date()
         workoutTimer = 0
+        resumeTimer()
+    }
 
-        // Timer updates the display every second by recalculating from start time
-        // This ensures accuracy even if app is backgrounded
+    /// Resume the timer tick without resetting start time (used after crash restore)
+    private func resumeTimer() {
         timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
