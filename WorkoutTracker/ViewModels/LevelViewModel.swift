@@ -1,22 +1,24 @@
 import Foundation
 import Combine
+import FirebaseFirestore
 
 /// ViewModel for managing user level state and progression
 @MainActor
-final class LevelViewModel: ObservableObject {
+final class LevelViewModel: ObservableObject, ViewModelErrorHandling {
 
     // MARK: - Published Properties
     @Published var userLevel: UserLevel?
     @Published var isLoading = false
     @Published var showError = false
     @Published var errorMessage = ""
-    @Published var pendingLevelUp: LevelUpEvent?
     @Published var showLevelUpCelebration = false
+    @Published var levelUpPreviousLevel: Int?
 
     // MARK: - Dependencies
     private let firestoreManager: FirestoreManager
     private let userId: String
     private var cancellables = Set<AnyCancellable>()
+    private var listenerRegistration: ListenerRegistration?
 
     // MARK: - Computed Properties
     var currentLevel: Int {
@@ -38,12 +40,19 @@ final class LevelViewModel: ObservableObject {
         setupListener()
     }
 
+    deinit {
+        listenerRegistration?.remove()
+    }
+
     // MARK: - Data Loading
 
     private func setupListener() {
         isLoading = true
 
-        firestoreManager.fetchUserLevel(userId: userId)
+        let result = firestoreManager.fetchUserLevel(userId: userId)
+        listenerRegistration = result.registration
+
+        result.publisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -55,7 +64,6 @@ final class LevelViewModel: ObservableObject {
                 if let level = level {
                     self?.userLevel = level
                 } else {
-                    // Initialize for new user
                     Task {
                         await self?.initializeUserLevel()
                     }
@@ -77,7 +85,7 @@ final class LevelViewModel: ObservableObject {
 
     /// Award XP to the user (called after workout completion)
     func awardWorkoutXP(hasPRs: Bool) async {
-        let xpAmount = LevelingService.calculateWorkoutXP(hasPRs: hasPRs)
+        let xpAmount = UserLevel.workoutXP(hasPRs: hasPRs)
 
         do {
             let (updatedLevel, didLevelUp, previousLevel) = try await firestoreManager.awardXP(
@@ -86,16 +94,10 @@ final class LevelViewModel: ObservableObject {
                 currentLevel: userLevel
             )
 
-            // Update local state
             userLevel = updatedLevel
 
-            // Trigger celebration if leveled up
             if didLevelUp, let previous = previousLevel {
-                pendingLevelUp = LevelUpEvent(
-                    previousLevel: previous,
-                    newLevel: updatedLevel.currentLevel,
-                    timestamp: Date()
-                )
+                levelUpPreviousLevel = previous
                 showLevelUpCelebration = true
             }
 
@@ -107,14 +109,6 @@ final class LevelViewModel: ObservableObject {
     /// Dismiss level up celebration
     func dismissLevelUp() {
         showLevelUpCelebration = false
-        pendingLevelUp = nil
-    }
-
-    // MARK: - Error Handling
-
-    private func handleError(_ error: Error) {
-        self.errorMessage = error.localizedDescription
-        self.showError = true
-        print("❌ LevelViewModel error: \(error)")
+        levelUpPreviousLevel = nil
     }
 }

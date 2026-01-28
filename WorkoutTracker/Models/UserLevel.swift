@@ -50,6 +50,37 @@ struct UserLevel: Identifiable, Codable, Hashable {
     var formattedProgress: String {
         "\(currentXP)/\(xpForNextLevel) XP"
     }
+
+    // MARK: - XP Calculations
+
+    /// Calculate XP earned for completing a workout
+    static func workoutXP(hasPRs: Bool) -> Int {
+        let baseXP = Constants.XP.baseWorkoutXP
+        return hasPRs ? Int(Double(baseXP) * Constants.XP.prMultiplier) : baseXP
+    }
+
+    /// Add XP and calculate new level state
+    /// Returns: (newLevel, newCurrentXP, newTotalXP, leveledUp)
+    static func addXP(
+        currentLevel: Int,
+        currentXP: Int,
+        totalXP: Int,
+        earnedXP: Int
+    ) -> (newLevel: Int, newCurrentXP: Int, newTotalXP: Int, leveledUp: Bool) {
+        var level = currentLevel
+        var xp = currentXP + earnedXP
+        let newTotalXP = totalXP + earnedXP
+        var leveledUp = false
+
+        // Check for level ups (could level up multiple times)
+        while xp >= xpRequiredForLevel(level) {
+            xp -= xpRequiredForLevel(level)
+            level += 1
+            leveledUp = true
+        }
+
+        return (level, xp, newTotalXP, leveledUp)
+    }
 }
 
 // MARK: - Firestore Conversion

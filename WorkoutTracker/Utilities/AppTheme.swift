@@ -29,7 +29,11 @@ enum AppTheme {
     /// Text colors
     static let textPrimary = Color.white
     static let textSecondary = Color(hex: "A0A0A0")
+    static let textSecondaryLight = Color(hex: "999999")
     static let textTertiary = Color(hex: "666666")
+
+    /// Additional backgrounds
+    static let progressTrackBackground = Color(hex: "2A2A2A")
 
     /// Primary flat colors (now blue)
     static let primaryGradient = LinearGradient(

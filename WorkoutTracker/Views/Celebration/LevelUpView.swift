@@ -106,7 +106,7 @@ struct LevelUpView: View {
         VStack(spacing: 8) {
             Text(label)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(hex: "666666"))
+                .foregroundStyle(AppTheme.textTertiary)
                 .tracking(0.8)
 
             Text("\(level)")
@@ -117,7 +117,7 @@ struct LevelUpView: View {
         .padding(.vertical, 20)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(hex: "1A1A1A"))
+                .fill(AppTheme.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(highlighted ? AppTheme.energyOrange : Color.clear, lineWidth: 2)

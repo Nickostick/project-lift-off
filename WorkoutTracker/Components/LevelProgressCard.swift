@@ -13,7 +13,7 @@ struct LevelProgressCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("LEVEL PROGRESS")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color(hex: "666666"))
+                        .foregroundStyle(AppTheme.textTertiary)
                         .tracking(0.8)
 
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -23,7 +23,7 @@ struct LevelProgressCard: View {
 
                         Text("\(currentXP)/\(requiredXP) XP")
                             .font(.system(size: 13, weight: .regular))
-                            .foregroundStyle(Color(hex: "999999"))
+                            .foregroundStyle(AppTheme.textSecondaryLight)
                     }
                 }
 
@@ -46,7 +46,7 @@ struct LevelProgressCard: View {
                 ZStack(alignment: .leading) {
                     // Background track
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(hex: "2A2A2A"))
+                        .fill(AppTheme.progressTrackBackground)
                         .frame(height: 8)
 
                     // Progress fill with gradient
@@ -70,7 +70,7 @@ struct LevelProgressCard: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(hex: "1A1A1A"))
+                .fill(AppTheme.cardBackground)
         )
     }
 }

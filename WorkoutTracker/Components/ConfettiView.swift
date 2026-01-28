@@ -6,7 +6,7 @@ struct ConfettiView: View {
 
     var body: some View {
         ZStack {
-            ForEach(0..<50, id: \.self) { index in
+            ForEach(0..<25, id: \.self) { index in
                 ConfettiPiece(counter: counter, index: index)
             }
         }

@@ -1,10 +1,11 @@
 import Foundation
 import Combine
+import FirebaseFirestore
 
 /// ViewModel for managing workout program templates
 @MainActor
-final class ProgramViewModel: ObservableObject {
-    
+final class ProgramViewModel: ObservableObject, ViewModelErrorHandling {
+
     // MARK: - Published Properties
     @Published var programs: [Program] = []
     @Published var selectedProgram: Program?
@@ -13,12 +14,13 @@ final class ProgramViewModel: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = ""
     @Published var searchText = ""
-    
+
     // MARK: - Dependencies
     private let firestoreManager: FirestoreManager
     private let userId: String
     private var cancellables = Set<AnyCancellable>()
-    
+    private var listenerRegistration: ListenerRegistration?
+
     // MARK: - Computed Properties
     var filteredPrograms: [Program] {
         if searchText.isEmpty {
@@ -36,13 +38,20 @@ final class ProgramViewModel: ObservableObject {
         self.firestoreManager = firestoreManager
         setupListeners()
     }
-    
+
+    deinit {
+        listenerRegistration?.remove()
+    }
+
     // MARK: - Data Loading
-    
+
     private func setupListeners() {
         isLoading = true
-        
-        firestoreManager.fetchPrograms(userId: userId)
+
+        let result = firestoreManager.fetchPrograms(userId: userId)
+        listenerRegistration = result.registration
+
+        result.publisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -241,12 +250,4 @@ final class ProgramViewModel: ObservableObject {
         return items
     }
     
-    // MARK: - Error Handling
-    
-    private func handleError(_ error: Error) {
-        self.error = error
-        self.errorMessage = error.localizedDescription
-        self.showError = true
-        print("❌ ProgramViewModel error: \(error)")
-    }
 }

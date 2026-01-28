@@ -197,6 +197,24 @@ extension Color {
     )
 }
 
+// MARK: - ViewModel Error Handling
+
+/// Shared error handling for ViewModels to eliminate duplicate handleError methods
+protocol ViewModelErrorHandling: AnyObject {
+    var showError: Bool { get set }
+    var errorMessage: String { get set }
+}
+
+extension ViewModelErrorHandling {
+    func handleError(_ error: Error) {
+        errorMessage = error.localizedDescription
+        showError = true
+        #if DEBUG
+        print("❌ \(type(of: self)) error: \(error)")
+        #endif
+    }
+}
+
 // MARK: - Array Extensions
 extension Array {
     /// Safe subscript that returns nil for out of bounds

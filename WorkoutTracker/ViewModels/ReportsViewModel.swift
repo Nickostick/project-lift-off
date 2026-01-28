@@ -1,9 +1,10 @@
 import Foundation
 import Combine
+import FirebaseFirestore
 
 /// ViewModel for reports and statistics
 @MainActor
-final class ReportsViewModel: ObservableObject {
+final class ReportsViewModel: ObservableObject, ViewModelErrorHandling {
     
     // MARK: - Published Properties
     @Published var isLoading = false
@@ -38,6 +39,7 @@ final class ReportsViewModel: ObservableObject {
     private let firestoreManager: FirestoreManager
     private let userId: String
     private var cancellables = Set<AnyCancellable>()
+    private var listenerRegistration: ListenerRegistration?
     
     // MARK: - Time Range Enum
     enum TimeRange: String, CaseIterable {
@@ -80,12 +82,18 @@ final class ReportsViewModel: ObservableObject {
         self.firestoreManager = firestoreManager
         setupListeners()
     }
-    
+
+    deinit {
+        listenerRegistration?.remove()
+    }
+
     // MARK: - Data Loading
-    
+
     private func setupListeners() {
-        // Listen to PRs
-        firestoreManager.fetchPersonalRecords(userId: userId)
+        let result = firestoreManager.fetchPersonalRecords(userId: userId)
+        listenerRegistration = result.registration
+
+        result.publisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
@@ -242,13 +250,6 @@ final class ReportsViewModel: ObservableObject {
         isLoading = false
     }
     
-    // MARK: - Error Handling
-    
-    private func handleError(_ error: Error) {
-        self.errorMessage = error.localizedDescription
-        self.showError = true
-        print("❌ ReportsViewModel error: \(error)")
-    }
 }
 
 // MARK: - Chart Data Models

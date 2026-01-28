@@ -47,8 +47,6 @@ enum Constants {
     enum XP {
         static let baseWorkoutXP = 100
         static let prMultiplier = 2.0
-        static let levelBaseXP = 100.0
-        static let levelExponent = 1.5
     }
 }
 

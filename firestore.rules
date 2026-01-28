@@ -37,6 +37,14 @@ service cloud.firestore {
                        request.resource.data.userId == request.auth.uid;
     }
 
+    // User levels - users can only access their own level data
+    match /userLevels/{levelId} {
+      allow read, write: if isAuthenticated() &&
+                            resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid;
+    }
+
     // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;

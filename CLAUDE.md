@@ -51,7 +51,6 @@ WorkoutTracker/
 
 ## Critical Services
 - **FirestoreManager:** All database operations, single source of truth
-- **LevelingService:** Pure XP calculation functions (100 × 1.5^level formula)
 - **NotificationManager:** Workout reminders
 
 ## Recent Major Features
@@ -61,7 +60,7 @@ WorkoutTracker/
 - **Formula:** Level N requires 100 × (1.5^N) XP
 - **UI:** LevelProgressCard on HomeView, LevelUpView celebration with confetti
 - **Integration:** WorkoutLogViewModel → LevelViewModel.awardXP() after workout completion
-- **Files:** UserLevel.swift, LevelViewModel.swift, LevelingService.swift, LevelProgressCard.swift, LevelUpView.swift
+- **Files:** UserLevel.swift, LevelViewModel.swift, LevelProgressCard.swift, LevelUpView.swift
 
 ## Development Workflow
 

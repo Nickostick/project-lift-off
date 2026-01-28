@@ -64,10 +64,10 @@ struct HomeView_Premium: View {
                 ActiveWorkoutView(viewModel: logViewModel)
             }
             .fullScreenCover(isPresented: $levelViewModel.showLevelUpCelebration) {
-                if let levelUp = levelViewModel.pendingLevelUp {
+                if let previousLevel = levelViewModel.levelUpPreviousLevel {
                     LevelUpView(
-                        previousLevel: levelUp.previousLevel,
-                        newLevel: levelUp.newLevel,
+                        previousLevel: previousLevel,
+                        newLevel: levelViewModel.currentLevel,
                         onDismiss: {
                             levelViewModel.dismissLevelUp()
                         }

@@ -52,9 +52,7 @@
 		4748FECEA9014846833D7F30 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF10294D0024859B64AE8C2 /* Session.swift */; };
 		4B58E20C49574ABC85186DF9 /* LibraryExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E5BBCA86E54473BFA6C92C /* LibraryExercise.swift */; };
 		ABB62BB837FA61ED821E1367 /* ProgramListView_Premium.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA57F8829CDD6BF5095A03F /* ProgramListView_Premium.swift */; };
-		E16FA6DA2F145F990081F540 /* LevelUpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16FA6D82F145F990081F540 /* LevelUpEvent.swift */; };
 		E16FA6DB2F145F990081F540 /* UserLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16FA6D92F145F990081F540 /* UserLevel.swift */; };
-		E16FA6DD2F145FBA0081F540 /* LevelingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16FA6DC2F145FBA0081F540 /* LevelingService.swift */; };
 		E16FA6DF2F145FD10081F540 /* LevelViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16FA6DE2F145FD10081F540 /* LevelViewModel.swift */; };
 		E16FA6E22F145FE70081F540 /* LevelProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16FA6E12F145FE70081F540 /* LevelProgressCard.swift */; };
 		E16FA6E32F145FE70081F540 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16FA6E02F145FE70081F540 /* ConfettiView.swift */; };
@@ -109,9 +107,7 @@
 		BDB8DC55F254FBCD254C02F3 /* PremiumCardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumCardComponents.swift; sourceTree = "<group>"; };
 		C026525D1266D921C2BBA7FB /* PremiumTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumTabBar.swift; sourceTree = "<group>"; };
 		DDF10294D0024859B64AE8C2 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
-		E16FA6D82F145F990081F540 /* LevelUpEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpEvent.swift; sourceTree = "<group>"; };
 		E16FA6D92F145F990081F540 /* UserLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLevel.swift; sourceTree = "<group>"; };
-		E16FA6DC2F145FBA0081F540 /* LevelingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelingService.swift; sourceTree = "<group>"; };
 		E16FA6DE2F145FD10081F540 /* LevelViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelViewModel.swift; sourceTree = "<group>"; };
 		E16FA6E02F145FE70081F540 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		E16FA6E12F145FE70081F540 /* LevelProgressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelProgressCard.swift; sourceTree = "<group>"; };
@@ -170,7 +166,6 @@
 		40000003 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				E16FA6D82F145F990081F540 /* LevelUpEvent.swift */,
 				E16FA6D92F145F990081F540 /* UserLevel.swift */,
 				10000004 /* Program.swift */,
 				10000005 /* WorkoutDay.swift */,
@@ -199,7 +194,6 @@
 		40000005 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				E16FA6DC2F145FBA0081F540 /* LevelingService.swift */,
 				10000013 /* FirebaseService.swift */,
 				10000014 /* AuthManager.swift */,
 				10000015 /* FirestoreManager.swift */,
@@ -416,7 +410,6 @@
 				00000029 /* WorkoutDayView.swift in Sources */,
 				00000030 /* WorkoutDayFormView.swift in Sources */,
 				00000031 /* ExerciseFormView.swift in Sources */,
-				E16FA6DA2F145F990081F540 /* LevelUpEvent.swift in Sources */,
 				E16FA6DB2F145F990081F540 /* UserLevel.swift in Sources */,
 				00000032 /* ActiveWorkoutView.swift in Sources */,
 				E16FA6E82F14615A0081F540 /* LevelUpView.swift in Sources */,
@@ -432,7 +425,6 @@
 				18CAC2E95D64A143B83198C2 /* PremiumTabBar.swift in Sources */,
 				4B58E20C49574ABC85186DF9 /* LibraryExercise.swift in Sources */,
 				26561648967741239E681AAF /* SessionExercise.swift in Sources */,
-				E16FA6DD2F145FBA0081F540 /* LevelingService.swift in Sources */,
 				4748FECEA9014846833D7F30 /* Session.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

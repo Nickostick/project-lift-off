@@ -11,12 +11,12 @@ final class FirestoreManager {
     // MARK: - Program Operations
     
     /// Fetch all programs for a user
-    func fetchPrograms(userId: String) -> AnyPublisher<[Program], Error> {
+    func fetchPrograms(userId: String) -> (publisher: AnyPublisher<[Program], Error>, registration: ListenerRegistration) {
         let subject = PassthroughSubject<[Program], Error>()
-        
+
         print("🔍 Fetching programs for userId: \(userId)")
-        
-        db.collection(Constants.Collections.programs)
+
+        let registration = db.collection(Constants.Collections.programs)
             .whereField("userId", isEqualTo: userId)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -49,8 +49,8 @@ final class FirestoreManager {
                 print("✅ Parsed \(programs.count) programs successfully")
                 subject.send(programs)
             }
-        
-        return subject.eraseToAnyPublisher()
+
+        return (subject.eraseToAnyPublisher(), registration)
     }
     
     /// Fetch a single program by ID
@@ -96,10 +96,10 @@ final class FirestoreManager {
     // MARK: - Workout Log Operations
     
     /// Fetch all workout logs for a user
-    func fetchWorkoutLogs(userId: String) -> AnyPublisher<[WorkoutLog], Error> {
+    func fetchWorkoutLogs(userId: String) -> (publisher: AnyPublisher<[WorkoutLog], Error>, registration: ListenerRegistration) {
         let subject = PassthroughSubject<[WorkoutLog], Error>()
-        
-        db.collection(Constants.Collections.workoutLogs)
+
+        let registration = db.collection(Constants.Collections.workoutLogs)
             .whereField("userId", isEqualTo: userId)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -127,10 +127,10 @@ final class FirestoreManager {
                 
                 subject.send(logs)
             }
-        
-        return subject.eraseToAnyPublisher()
+
+        return (subject.eraseToAnyPublisher(), registration)
     }
-    
+
     /// Fetch workout logs within a date range
     func fetchWorkoutLogs(userId: String, from startDate: Date, to endDate: Date) async throws -> [WorkoutLog] {
         let snapshot = try await db.collection(Constants.Collections.workoutLogs)
@@ -173,10 +173,10 @@ final class FirestoreManager {
     // MARK: - Personal Records Operations
     
     /// Fetch all personal records for a user
-    func fetchPersonalRecords(userId: String) -> AnyPublisher<[PersonalRecord], Error> {
+    func fetchPersonalRecords(userId: String) -> (publisher: AnyPublisher<[PersonalRecord], Error>, registration: ListenerRegistration) {
         let subject = PassthroughSubject<[PersonalRecord], Error>()
-        
-        db.collection(Constants.Collections.personalRecords)
+
+        let registration = db.collection(Constants.Collections.personalRecords)
             .whereField("userId", isEqualTo: userId)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -200,10 +200,10 @@ final class FirestoreManager {
                 
                 subject.send(records)
             }
-        
-        return subject.eraseToAnyPublisher()
+
+        return (subject.eraseToAnyPublisher(), registration)
     }
-    
+
     /// Get personal record for a specific exercise
     func getPersonalRecord(userId: String, exerciseName: String) async throws -> PersonalRecord? {
         // Fetch all records for this exercise and sort in memory to find PR
@@ -268,12 +268,14 @@ final class FirestoreManager {
     /// Get the last performance for a specific exercise
     /// Returns an array of strings representing each set (e.g. ["10x135", "10x135", "8x145"])
     func getLastPerformance(userId: String, exerciseName: String) async throws -> [String]? {
-        // Fetch recent logs containing this exercise
+        // Fetch recent logs (limited to avoid full collection scan)
         let snapshot = try await db.collection(Constants.Collections.workoutLogs)
             .whereField("userId", isEqualTo: userId)
+            .order(by: "startedAt", descending: true)
+            .limit(to: 50)
             .getDocuments()
-            
-        // Filter and sort client-side to find the most recent log with this exercise
+
+        // Filter client-side to find the most recent log with this exercise
         let lastLog = snapshot.documents.compactMap { doc -> WorkoutLog? in
             var data = doc.data()
             if let timestamp = data["startedAt"] as? Timestamp {
@@ -281,11 +283,9 @@ final class FirestoreManager {
             }
             return WorkoutLog(from: data)
         }
-        .filter { log in
+        .first { log in
             log.exercises.contains { $0.name == exerciseName }
         }
-        .sorted { $0.startedAt > $1.startedAt }
-        .first
         
         guard let log = lastLog,
               let exerciseLog = log.exercises.first(where: { $0.name == exerciseName }) else {
@@ -314,12 +314,13 @@ final class FirestoreManager {
     
     /// Get exercise progress data points
     func getExerciseProgress(userId: String, exerciseName: String, limit: Int = 30) async throws -> [ProgressDataPoint] {
-        // Fetch all logs and sort in memory
-        // This avoids needing a composite index for (userId + startedAt)
+        // Fetch recent logs with limit to avoid full collection scan
         let snapshot = try await db.collection(Constants.Collections.workoutLogs)
             .whereField("userId", isEqualTo: userId)
+            .order(by: "startedAt", descending: true)
+            .limit(to: limit * 10)
             .getDocuments()
-            
+
         var logs = snapshot.documents.compactMap { doc -> WorkoutLog? in
             var data = doc.data()
             if let timestamp = data["startedAt"] as? Timestamp {
@@ -327,14 +328,9 @@ final class FirestoreManager {
             }
             return WorkoutLog(from: data)
         }
-        
-        // Sort by date ascending
+
+        // Sort by date ascending for chronological progress
         logs.sort { $0.startedAt < $1.startedAt }
-        
-        // Take the last (limit*10) to process, or all if fewer
-        if logs.count > limit * 10 {
-            logs = Array(logs.suffix(limit * 10))
-        }
         
         var dataPoints: [ProgressDataPoint] = []
         
@@ -359,10 +355,10 @@ final class FirestoreManager {
     // MARK: - User Level Operations
 
     /// Fetch user level data with real-time updates
-    func fetchUserLevel(userId: String) -> AnyPublisher<UserLevel?, Error> {
+    func fetchUserLevel(userId: String) -> (publisher: AnyPublisher<UserLevel?, Error>, registration: ListenerRegistration) {
         let subject = PassthroughSubject<UserLevel?, Error>()
 
-        db.collection(Constants.Collections.userLevels)
+        let registration = db.collection(Constants.Collections.userLevels)
             .whereField("userId", isEqualTo: userId)
             .limit(to: 1)
             .addSnapshotListener { snapshot, error in
@@ -390,7 +386,7 @@ final class FirestoreManager {
                 subject.send(UserLevel(from: data))
             }
 
-        return subject.eraseToAnyPublisher()
+        return (subject.eraseToAnyPublisher(), registration)
     }
 
     /// Save or update user level
@@ -412,14 +408,19 @@ final class FirestoreManager {
         return userLevel
     }
 
-    /// Award XP and update level
+    /// Award XP and update level using a transaction for atomicity
     /// Returns: (updatedUserLevel, didLevelUp, previousLevel)
     func awardXP(
         userId: String,
         xpAmount: Int,
         currentLevel: UserLevel?
     ) async throws -> (UserLevel, Bool, Int?) {
-        // Get or create user level
+        guard xpAmount > 0 else {
+            let level = currentLevel ?? UserLevel(userId: userId)
+            return (level, false, nil)
+        }
+
+        // If no existing level, initialize first
         let level: UserLevel
         if let existingLevel = currentLevel {
             level = existingLevel
@@ -427,29 +428,56 @@ final class FirestoreManager {
             level = try await initializeUserLevel(userId: userId)
         }
 
-        // Calculate new state
-        let result = LevelingService.addXP(
-            currentLevel: level.currentLevel,
-            currentXP: level.currentXP,
-            totalXP: level.totalXP,
-            earnedXP: xpAmount
-        )
+        let docRef = db.collection(Constants.Collections.userLevels).document(level.id)
 
-        let previousLevel = level.currentLevel
+        // Capture results from transaction via shared mutable state
+        var resultLevel = level
+        var resultDidLevelUp = false
+        var resultPreviousLevel: Int? = nil
 
-        // Create updated level
-        var updatedLevel = level
-        updatedLevel.currentLevel = result.newLevel
-        updatedLevel.currentXP = result.newCurrentXP
-        updatedLevel.totalXP = result.newTotalXP
+        // Use transaction for atomic read-modify-write
+        try await db.runTransaction({ (transaction, errorPointer) -> Any? in
+            let snapshot: DocumentSnapshot
+            do {
+                snapshot = try transaction.getDocument(docRef)
+            } catch let fetchError as NSError {
+                errorPointer?.pointee = fetchError
+                return nil
+            }
 
-        if result.leveledUp {
-            updatedLevel.lastLevelUpDate = Date()
-        }
+            var current: UserLevel
+            if var data = snapshot.data() {
+                // Convert timestamps for parsing
+                if let ts = data["updatedAt"] as? Timestamp { data["updatedAt"] = ts.dateValue() }
+                if let ts = data["lastLevelUpDate"] as? Timestamp { data["lastLevelUpDate"] = ts.dateValue() }
+                current = UserLevel(from: data) ?? UserLevel(userId: userId)
+            } else {
+                current = UserLevel(userId: userId)
+            }
 
-        // Save to Firestore
-        try await saveUserLevel(updatedLevel)
+            let prevLevel = current.currentLevel
+            let xpResult = UserLevel.addXP(
+                currentLevel: current.currentLevel,
+                currentXP: current.currentXP,
+                totalXP: current.totalXP,
+                earnedXP: xpAmount
+            )
 
-        return (updatedLevel, result.leveledUp, result.leveledUp ? previousLevel : nil)
+            current.currentLevel = xpResult.newLevel
+            current.currentXP = xpResult.newCurrentXP
+            current.totalXP = xpResult.newTotalXP
+            current.updatedAt = Date()
+            if xpResult.leveledUp { current.lastLevelUpDate = Date() }
+
+            transaction.setData(current.firestoreData, forDocument: docRef)
+
+            resultLevel = current
+            resultDidLevelUp = xpResult.leveledUp
+            resultPreviousLevel = xpResult.leveledUp ? prevLevel : nil
+
+            return nil
+        })
+
+        return (resultLevel, resultDidLevelUp, resultPreviousLevel)
     }
 }
