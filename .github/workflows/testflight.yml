@@ -19,7 +19,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+        run: |
+          # Use latest Xcode available (15.4 on macos-14)
+          sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
       - name: Show Xcode version
         run: xcodebuild -version
@@ -31,7 +33,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Install any dependencies if needed (CocoaPods, SPM, etc.)
+          # Remove Package.resolved if it has incompatible version format
+          find . -name "Package.resolved" -delete || true
+          # Resolve package dependencies fresh
           xcodebuild -resolvePackageDependencies -project $PROJECT -scheme $SCHEME
 
       - name: Build archive
