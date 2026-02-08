@@ -83,14 +83,12 @@ jobs:
             -scheme $SCHEME \
             -destination "generic/platform=iOS" \
             -archivePath $RUNNER_TEMP/WorkoutTracker.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM=$TEAM_ID \
-            PROVISIONING_PROFILE_SPECIFIER="ProjectLiftOff Distribution"
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Create ExportOptions.plist
         run: |
-          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          cat > $RUNNER_TEMP/ExportOptions.plist << 'PLISTEOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -100,19 +98,21 @@ jobs:
               <key>destination</key>
               <string>upload</string>
               <key>teamID</key>
-              <string>$TEAM_ID</string>
+              <string>35Q5DRWA8G</string>
               <key>signingStyle</key>
               <string>manual</string>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>$BUNDLE_ID</key>
+                  <key>com.nicholasprijic.workouttracker</key>
                   <string>ProjectLiftOff Distribution</string>
               </dict>
               <key>uploadSymbols</key>
               <true/>
           </dict>
           </plist>
-          EOF
+          PLISTEOF
 
       - name: Export and upload to TestFlight
         run: |
