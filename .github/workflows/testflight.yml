@@ -31,6 +31,10 @@ jobs:
           mkdir -p ~/private_keys
           echo "${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}" > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
 
+      - name: Create GoogleService-Info.plist
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}' > WorkoutTracker/GoogleService-Info.plist
+
       - name: Install dependencies
         run: |
           # Remove Package.resolved if it has incompatible version format
