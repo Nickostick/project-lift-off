@@ -237,8 +237,8 @@ struct ExerciseCard: View {
                     HStack(spacing: 12) {
                         Text("Set")
                             .frame(width: 30)
-                        Text("Previous")
-                            .frame(width: 70)
+                        Text("Target")
+                            .frame(width: 80, alignment: .leading)
                         Text("Weight")
                             .frame(width: 70)
                         Text("Reps")
@@ -296,18 +296,29 @@ struct SetInputRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
+            // Set number
             Text("\(setNumber)")
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .frame(width: 30)
             
+            // Stacked target + previous performance
+            VStack(alignment: .leading, spacing: 2) {
+                // Top line: target reps from program template
+                Text("\(set.targetReps) reps")
+                    .font(.caption)
+                    .foregroundStyle(.primary)
+                
+                // Bottom line: last workout's actual performance
+                if let previous = set.previousPerformance {
+                    Text("↳ \(previous) last")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 80, alignment: .leading)
             
-            Text(set.previousPerformance ?? "\(set.targetReps)×\(Int(set.targetWeight))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 70)
-                .minimumScaleFactor(0.8)
-            
+            // Weight input (pre-filled from last workout — existing behavior)
             TextField("0", text: $weightText)
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.roundedBorder)
@@ -317,6 +328,7 @@ struct SetInputRow: View {
                     onUpdate(set.actualReps, weight, set.isCompleted)
                 }
             
+            // Reps input (pre-filled with target reps from template)
             TextField("0", text: $repsText)
                 .keyboardType(.numberPad)
                 .textFieldStyle(.roundedBorder)
@@ -328,6 +340,7 @@ struct SetInputRow: View {
             
             Spacer()
             
+            // Completion toggle
             Button(action: {
                 let newCompleted = !set.isCompleted
                 onUpdate(
@@ -346,8 +359,14 @@ struct SetInputRow: View {
         .padding(.vertical, 4)
         .background(set.isCompleted ? Color.green.opacity(0.1) : Color.clear)
         .onAppear {
+            // Weight: pre-fill from last workout (existing behavior via set.weight)
             weightText = set.weight > 0 ? String(format: "%.0f", set.weight) : ""
-            repsText = set.actualReps > 0 ? "\(set.actualReps)" : ""
+            // Reps: pre-fill with target reps from template if no actual reps entered yet
+            if set.actualReps > 0 {
+                repsText = "\(set.actualReps)"
+            } else {
+                repsText = set.targetReps > 0 ? "\(set.targetReps)" : ""
+            }
         }
         .contextMenu {
             Button(role: .destructive, action: onRemove) {
