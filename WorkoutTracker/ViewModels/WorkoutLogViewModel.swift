@@ -259,6 +259,9 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
             // Save the workout
             try await firestoreManager.saveWorkoutLog(workout)
 
+            // Update template targetWeight with actual performed weights
+            await updateTemplateWeights(from: workout)
+
             // Award XP for workout completion
             if let levelVM = levelViewModel {
                 await levelVM.awardWorkoutXP(hasPRs: !newPRs.isEmpty)
@@ -275,6 +278,41 @@ final class WorkoutLogViewModel: ObservableObject, ViewModelErrorHandling {
         }
 
         isLoading = false
+    }
+
+    /// Update the program template's targetWeight for each exercise based on completed sets.
+    /// This ensures the next workout session pre-fills with the weights the user actually lifted.
+    private func updateTemplateWeights(from workout: WorkoutLog) async {
+        guard let programId = workout.programId, let dayId = workout.dayId else { return }
+
+        do {
+            guard var program = try await firestoreManager.fetchProgram(id: programId) else { return }
+            guard let dayIndex = program.days.firstIndex(where: { $0.id == dayId }) else { return }
+
+            var updated = false
+            for exerciseLog in workout.exercises {
+                // Find the heaviest completed set weight for this exercise
+                let completedSets = exerciseLog.completedSets.filter { $0.isCompleted && $0.weight > 0 }
+                guard let maxWeight = completedSets.map({ $0.weight }).max() else { continue }
+
+                // Match by exercise name to the template
+                if let exerciseIndex = program.days[dayIndex].exercises.firstIndex(where: { $0.name == exerciseLog.name }) {
+                    let currentTarget = program.days[dayIndex].exercises[exerciseIndex].targetWeight
+                    if maxWeight != currentTarget {
+                        program.days[dayIndex].exercises[exerciseIndex].targetWeight = maxWeight
+                        updated = true
+                    }
+                }
+            }
+
+            if updated {
+                try await firestoreManager.saveProgram(program)
+                print("✅ Template weights updated for \(program.name) — \(program.days[dayIndex].name)")
+            }
+        } catch {
+            // Non-fatal: log but don't fail the workout save
+            print("⚠️ Failed to update template weights: \(error.localizedDescription)")
+        }
     }
 
     /// Discard the active workout
