@@ -27,6 +27,11 @@ final class AuthViewModel: ObservableObject {
         authManager.currentUser != nil
     }
     
+    /// True while Firebase is restoring auth state from keychain
+    var isCheckingAuth: Bool {
+        authManager.isCheckingAuth
+    }
+    
     var currentUser: User? {
         authManager.currentUser
     }

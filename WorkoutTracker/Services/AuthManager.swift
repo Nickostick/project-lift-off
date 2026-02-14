@@ -9,6 +9,8 @@ final class AuthManager: ObservableObject {
     @Published private(set) var currentUser: User?
     @Published private(set) var isLoading = false
     @Published private(set) var error: AuthError?
+    /// True while waiting for Firebase to restore auth state from keychain
+    @Published private(set) var isCheckingAuth = true
     
     // MARK: - Private Properties
     private var authStateHandle: AuthStateDidChangeListenerHandle?
@@ -28,6 +30,10 @@ final class AuthManager: ObservableObject {
         authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 self?.currentUser = user
+                // First callback means Firebase finished checking keychain
+                if self?.isCheckingAuth == true {
+                    self?.isCheckingAuth = false
+                }
             }
         }
     }
