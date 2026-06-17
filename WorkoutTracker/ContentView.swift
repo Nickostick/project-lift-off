@@ -7,13 +7,37 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if authViewModel.isAuthenticated {
+            if authViewModel.isCheckingAuth {
+                // Show splash while Firebase restores auth state
+                AuthLoadingView()
+            } else if authViewModel.isAuthenticated {
                 MainTabView(userId: authViewModel.currentUserId ?? "")
             } else {
                 AuthenticationView()
             }
         }
         .animation(.easeInOut, value: authViewModel.isAuthenticated)
+        .animation(.easeInOut, value: authViewModel.isCheckingAuth)
+    }
+}
+
+/// Minimal splash screen shown while Firebase checks auth state
+private struct AuthLoadingView: View {
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                // App icon placeholder - using SF Symbol as fallback
+                Image(systemName: "figure.strengthtraining.traditional")
+                    .font(.system(size: 60))
+                    .foregroundStyle(AppTheme.neonGreen)
+                
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(1.2)
+            }
+        }
     }
 }
 
